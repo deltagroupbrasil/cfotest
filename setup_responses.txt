@@ -1,0 +1,8 @@
+y
+
+us-central1
+delta-cfo-db
+delta_cfo
+delta_user
+delta-cfo-agent
+y

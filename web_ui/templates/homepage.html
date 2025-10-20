@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta CFO Agent - AI-Powered Financial Intelligence</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_advanced.css') }}?v={{ cache_buster }}">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .hero-subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .cta-button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .cta-primary {
+            background: white;
+            color: #667eea;
+        }
+        .cta-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s;
+        }
+        .feature-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+        }
+        .status-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 3rem 0;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .status-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .status-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .status-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .roadmap-section {
+            margin: 3rem 0;
+        }
+        .roadmap-item {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .roadmap-phase {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .roadmap-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+        .roadmap-description {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <h2>Delta CFO Agent</h2>
+                <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Delta's proprietary self improving AI CFO Agent</p>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="/dashboard" class="nav-link">Expenses</a>
+                <a href="/revenue" class="nav-link">Revenue Recognition</a>
+                <a href="/cfo-dashboard" class="nav-link">Reports</a>
+                <a href="/invoices" class="nav-link">Invoices</a>
+                <a href="/files" class="nav-link">File Manager</a>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1 class="hero-title">🤖 AI-Powered Financial Intelligence</h1>
+            <p class="hero-subtitle">
+                Transform your financial operations with intelligent automation.<br>
+                From transaction processing to revenue recognition - all powered by Claude AI.
+            </p>
+            <div class="hero-cta">
+                <a href="/dashboard" class="cta-button cta-primary">🚀 Launch Dashboard</a>
+                <a href="/files" class="cta-button cta-secondary">📁 Upload Documents</a>
+            </div>
+        </section>
+
+        <!-- Platform Metrics -->
+        <section class="status-section">
+            <h2>📊 Platform Metrics</h2>
+            <p>Real-time intelligence from AI-powered financial operations</p>
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-number" style="color: #667eea;">12+</div>
+                    <div class="status-label">Built-in AI Tools</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-number" style="color: #28a745;">{{ stats.total_transactions or 0 }}</div>
+                    <div class="status-label">Transactions Processed</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-number" style="color: #17a2b8;">7</div>
+                    <div class="status-label">Business Units</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-number" style="color: #ffc107;">{{ stats.needs_review or 0 }}</div>
+                    <div class="status-label">Pending Review</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mission Statement -->
+        <section style="background: #f8f9fa; padding: 2rem; border-radius: 12px; margin: 3rem 0; text-align: center;">
+            <p style="font-size: 1.4rem; color: #667eea; font-weight: 600; margin: 0;">
+                Delta's proprietary self improving AI CFO Agent
+            </p>
+        </section>
+
+        <!-- Development Roadmap -->
+        <section class="roadmap-section">
+            <h2>🗺️ Development Roadmap</h2>
+            <div class="roadmap-item">
+                <div class="roadmap-phase">Phase 1 - Complete ✅</div>
+                <h3 class="roadmap-title">Core Transaction Processing</h3>
+                <p class="roadmap-description">AI-powered document ingestion, transaction classification, and advanced dashboard with real-time analytics.</p>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-phase">Phase 2 - In Development 🚧</div>
+                <h3 class="roadmap-title">Multi-User Onboarding System</h3>
+                <p class="roadmap-description">User authentication, role-based access control, client onboarding wizard, and consultant dashboard for Leap CFO services.</p>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-phase">Phase 3 - Planned 📋</div>
+                <h3 class="roadmap-title">Revenue Recognition Dashboard</h3>
+                <p class="roadmap-description">Automated invoice processing, ARR tracking, revenue forecasting, and ASC 606 compliance for enterprise clients.</p>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-phase">Phase 4 - Future 🔮</div>
+                <h3 class="roadmap-title">Advanced Reporting Engine</h3>
+                <p class="roadmap-description">Financial statement generation, AI-powered insights, interactive dashboards, and automated report delivery.</p>
+            </div>
+        </section>
+
+        <!-- Team Section -->
+        <section style="background: #f8f9fa; padding: 2rem; border-radius: 12px; margin: 3rem 0;">
+            <h2>👥 Delta Team Development</h2>
+            <p style="color: #666; margin-bottom: 1.5rem;">
+                Currently being developed and tested by our internal Delta operations team and admin department.
+                This real-world usage drives our feature development and ensures practical, business-ready functionality.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div style="background: white; padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="color: #667eea; margin-bottom: 0.5rem;">🏢 Internal Operations</h4>
+                    <p style="color: #666; font-size: 0.9rem;">Delta team testing core features and providing feedback for daily financial operations.</p>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="color: #667eea; margin-bottom: 0.5rem;">📊 Admin Department</h4>
+                    <p style="color: #666; font-size: 0.9rem;">Bug fixing and feature validation through real-world financial data processing.</p>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="color: #667eea; margin-bottom: 0.5rem;">🎯 Leap CFO Prep</h4>
+                    <p style="color: #666; font-size: 0.9rem;">Preparing for external deployment to our fractional CFO service clients.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wallet Management Section -->
+        <section class="status-section" id="wallet-management">
+            <h2>🔐 Wallet Address Management</h2>
+            <p>Manage known cryptocurrency wallet addresses for accurate transaction classification</p>
+
+            <!-- Add Wallet Form -->
+            <div style="background: white; padding: 2rem; border-radius: 12px; margin: 2rem 0;">
+                <h3 style="color: #667eea; margin-bottom: 1.5rem;">➕ Add New Wallet</h3>
+                <form id="addWalletForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Wallet Address *</label>
+                        <input type="text" id="walletAddress" name="wallet_address" required
+                               placeholder="0x..."
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px; font-family: monospace;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Entity Name *</label>
+                        <input type="text" id="entityName" name="entity_name" required
+                               placeholder="e.g., Coinbase Exchange"
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Wallet Type *</label>
+                        <select id="walletType" name="wallet_type" required
+                                style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px;">
+                            <option value="">Select type...</option>
+                            <option value="internal">Internal (Company Owned)</option>
+                            <option value="exchange">Exchange</option>
+                            <option value="customer">Customer</option>
+                            <option value="vendor">Vendor</option>
+                            <option value="partner">Partner</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Purpose</label>
+                        <input type="text" id="walletPurpose" name="purpose"
+                               placeholder="e.g., Primary trading wallet"
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Notes</label>
+                        <textarea id="walletNotes" name="notes" rows="2"
+                                  placeholder="Optional notes about this wallet..."
+                                  style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <button type="submit" style="background: #667eea; color: white; padding: 1rem 2rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">
+                            ✅ Add Wallet
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Wallets List -->
+            <div style="background: white; padding: 2rem; border-radius: 12px;">
+                <h3 style="color: #667eea; margin-bottom: 1.5rem;">📋 Known Wallets (<span id="walletCount">0</span>)</h3>
+                <div id="walletsList" style="display: grid; gap: 1rem;">
+                    <!-- Wallets will be loaded here -->
+                    <div style="text-align: center; padding: 2rem; color: #999;">
+                        <p>Loading wallets...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Wallet Management JavaScript -->
+    <script>
+        // Load wallets on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWallets();
+        });
+
+        // Add wallet form submission
+        document.getElementById('addWalletForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                wallet_address: document.getElementById('walletAddress').value.trim(),
+                entity_name: document.getElementById('entityName').value.trim(),
+                wallet_type: document.getElementById('walletType').value,
+                purpose: document.getElementById('walletPurpose').value.trim(),
+                notes: document.getElementById('walletNotes').value.trim()
+            };
+
+            try {
+                const response = await fetch('/api/wallets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('✅ Wallet added successfully!');
+                    document.getElementById('addWalletForm').reset();
+                    loadWallets();
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Failed to add wallet'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        });
+
+        // Load and display wallets
+        async function loadWallets() {
+            try {
+                const response = await fetch('/api/wallets');
+                const result = await response.json();
+
+                if (result.success && result.wallets) {
+                    displayWallets(result.wallets);
+                } else {
+                    document.getElementById('walletsList').innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;"><p>No wallets found</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('walletsList').innerHTML = '<div style="text-align: center; padding: 2rem; color: #e53e3e;"><p>Error loading wallets: ' + error.message + '</p></div>';
+            }
+        }
+
+        // Display wallets in the list
+        function displayWallets(wallets) {
+            const walletsList = document.getElementById('walletsList');
+            const walletCount = document.getElementById('walletCount');
+
+            walletCount.textContent = wallets.length;
+
+            if (wallets.length === 0) {
+                walletsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;"><p>No wallets added yet. Add your first wallet above!</p></div>';
+                return;
+            }
+
+            walletsList.innerHTML = wallets.map(wallet => `
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid ${getWalletTypeColor(wallet.wallet_type)};">
+                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="background: ${getWalletTypeColor(wallet.wallet_type)}; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">
+                                    ${wallet.wallet_type}
+                                </span>
+                                <h4 style="margin: 0; color: #333; font-size: 1.1rem;">${wallet.entity_name}</h4>
+                            </div>
+                            <p style="margin: 0.5rem 0; font-family: monospace; color: #667eea; font-size: 0.9rem; word-break: break-all;">
+                                ${wallet.wallet_address}
+                            </p>
+                            ${wallet.purpose ? `<p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">📝 ${wallet.purpose}</p>` : ''}
+                            ${wallet.notes ? `<p style="margin: 0.5rem 0; color: #999; font-size: 0.85rem; font-style: italic;">${wallet.notes}</p>` : ''}
+                            <p style="margin: 0.5rem 0 0 0; color: #999; font-size: 0.75rem;">
+                                Added: ${new Date(wallet.created_at).toLocaleString()}
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="deleteWallet('${wallet.id}')"
+                                    style="background: #e53e3e; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get color based on wallet type
+        function getWalletTypeColor(type) {
+            const colors = {
+                'internal': '#667eea',
+                'exchange': '#28a745',
+                'customer': '#17a2b8',
+                'vendor': '#ffc107',
+                'partner': '#6f42c1'
+            };
+            return colors[type] || '#6c757d';
+        }
+
+        // Delete wallet
+        async function deleteWallet(walletId) {
+            if (!confirm('Are you sure you want to delete this wallet? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/wallets/${walletId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('✅ Wallet deleted successfully!');
+                    loadWallets();
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Failed to delete wallet'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+{
+  "apiVersion": "serving.knative.dev/v1",
+  "kind": "Service",
+  "metadata": {
+    "annotations": {
+      "run.googleapis.com/ingress": "all"
+    },
+    "name": "deltacfoagent",
+    "namespace": "620026562181"
+  },
+  "spec": {
+    "template": {
+      "metadata": {
+        "annotations": {
+          "autoscaling.knative.dev/maxScale": "100",
+          "run.googleapis.com/cloudsql-instances": "aicfo-473816:southamerica-east1:delta-cfo-db",
+          "run.googleapis.com/client-name": "gcloud",
+          "run.googleapis.com/client-version": "541.0.0"
+        }
+      },
+      "spec": {
+        "containerConcurrency": 80,
+        "timeoutSeconds": 300,
+        "serviceAccountName": "620026562181-compute@developer.gserviceaccount.com",
+        "containers": [
+          {
+            "image": "southamerica-east1-docker.pkg.dev/aicfo-473816/cloud-run-source-deploy/deltacfoagent/deltacfoagent:6adef91c98914bfa391db76d19e4bb15edf59eb9",
+            "ports": [
+              {
+                "name": "http1",
+                "containerPort": 8080
+              }
+            ],
+            "env": [
+              {
+                "name": "ANTHROPIC_API_KEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "1",
+                    "name": "ANTHROPIC_API_KEY"
+                  }
+                }
+              },
+              {
+                "name": "DB_TYPE",
+                "value": "postgresql"
+              },
+              {
+                "name": "DB_HOST",
+                "value": "34.39.143.82"
+              },
+              {
+                "name": "DB_PORT",
+                "value": "5432"
+              },
+              {
+                "name": "DB_NAME",
+                "value": "delta_cfo"
+              },
+              {
+                "name": "DB_USER",
+                "value": "delta_user"
+              },
+              {
+                "name": "DB_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "1",
+                    "name": "db_password_sa"
+                  }
+                }
+              },
+              {
+                "name": "DB_SOCKET_PATH",
+                "value": "/cloudsql/aicfo-473816:southamerica-east1:delta-cfo-db"
+              },
+              {
+                "name": "FLASK_ENV",
+                "value": "production"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "2Gi"
+              }
+            },
+            "startupProbe": {
+              "timeoutSeconds": 240,
+              "periodSeconds": 240,
+              "failureThreshold": 1,
+              "tcpSocket": {
+                "port": 8080
+              }
+            }
+          }
+        ]
+      }
+    },
+    "traffic": [
+      {
+        "percent": 100,
+        "latestRevision": true
+      }
+    ]
+  }
+}

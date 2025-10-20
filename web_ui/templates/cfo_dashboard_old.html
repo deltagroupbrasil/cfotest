@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta CFO Agent - Financial Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_advanced.css') }}?v={{ cache_buster }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/d3-sankey@0.12/dist/d3-sankey.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <h2>Delta CFO Agent</h2>
+                <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Delta's proprietary self improving AI CFO Agent</p>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/dashboard" class="nav-link">Expenses</a>
+                <a href="/revenue" class="nav-link">Revenue Recognition</a>
+                <a href="/cfo-dashboard" class="nav-link active">Reports</a>
+                <a href="/invoices" class="nav-link">Invoices</a>
+                <a href="/files" class="nav-link">File Manager</a>
+            </div>
+        </nav>
+
+        <div class="main-layout">
+            <div class="dashboard-content">
+                <!-- Financial Reports Header - Updated -->
+                <header>
+                    <h1>📊 Financial Reports</h1>
+                    <div class="stats-summary">
+                        <div class="stat-card">
+                            <h3>Total Revenue</h3>
+                            <div class="stat-number positive" id="totalRevenue">Loading...</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Expenses</h3>
+                            <div class="stat-number negative" id="totalExpenses">Loading...</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Net Profit</h3>
+                            <div class="stat-number" id="netProfit">Loading...</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Cash Position</h3>
+                            <div class="stat-number" id="cashPosition">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="date-range">
+                        📅 Real-time Financial Analytics Dashboard
+                    </div>
+                </header>
+
+                <!-- Filter Controls -->
+                <div class="filter-section">
+                    <h2>🔍 Report Filters</h2>
+                    <div class="filter-grid">
+                        <div class="filter-group">
+                            <label for="periodSelector">Time Period:</label>
+                            <select id="periodSelector">
+                                <option value="all_time" selected>All Time</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="yearly">Yearly</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="entityFilter">Business Entity:</label>
+                            <select id="entityFilter">
+                                <option value="">All Entities</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group" id="customDateRange" style="display: none;">
+                            <label for="startDateInput">Start Date:</label>
+                            <input type="date" id="startDateInput">
+                        </div>
+
+                        <div class="filter-group" id="customDateRangeEnd" style="display: none;">
+                            <label for="endDateInput">End Date:</label>
+                            <input type="date" id="endDateInput">
+                        </div>
+                    </div>
+
+                    <div class="quick-filters">
+                        <h3>🔍 Quick Filters:</h3>
+                        <button id="filterYTD" class="btn-quick">2025 YTD</button>
+                        <button id="filter2024" class="btn-quick">2024 Full Year</button>
+                        <button id="filterQ4" class="btn-quick">Q4 2024</button>
+                        <button id="filterLastMonth" class="btn-quick">Last Month</button>
+                    </div>
+
+                    <button id="refreshDashboard" class="btn-primary">🔄 Refresh Dashboard</button>
+                    <button id="resetFilters" class="btn-secondary">Clear Filters</button>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>📊 Financial Analytics Charts</h2>
+                        <div class="table-info">
+                            <span>Real-time Financial Data Visualization</span>
+                        </div>
+                    </div>
+
+                    <!-- Main Charts Grid -->
+                    <div style="padding: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 2rem;">
+
+                        <!-- Revenue vs Expenses Chart -->
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <h3 style="margin-bottom: 1rem; color: #2d3748;">📊 Revenue vs Expenses</h3>
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="revenueExpensesChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Monthly P&L Trend -->
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <h3 style="margin-bottom: 1rem; color: #2d3748;">📈 Monthly P&L Trend</h3>
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="monthlyPLChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Entity Performance -->
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <h3 style="margin-bottom: 1rem; color: #2d3748;">🏢 Entity Performance</h3>
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="entityChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Cash Flow -->
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            <h3 style="margin-bottom: 1rem; color: #2d3748;">💵 Cash Flow Trend</h3>
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="cashFlowChart"></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Sankey Financial Flow Diagram -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>🌊 Financial Flow Analysis</h2>
+                        <div class="table-info">
+                            <span>Interactive Sankey diagram showing money flow between categories</span>
+                        </div>
+                    </div>
+
+                    <!-- Sankey Diagram Container -->
+                    <div style="padding: 2rem; background: white; margin: 0 2rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                        <div id="sankeyDiagram" style="width: 100%; height: 500px; overflow: hidden;"></div>
+                        <div id="sankeyLegend" style="margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #666;">
+                            <p><strong>Flow Analysis:</strong> This diagram shows how revenue flows through different expense categories to net profit</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Reports Section -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>📄 Financial Reports</h2>
+                        <div class="table-info">
+                            <span>Generate professional financial statements in PDF format</span>
+                        </div>
+                    </div>
+
+                    <!-- Reports Grid -->
+                    <div style="padding: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+
+                        <!-- DRE Report -->
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); border-left: 4px solid #667eea;">
+                            <h3 style="margin-bottom: 1rem; color: #2d3748; display: flex; align-items: center;">
+                                <span style="margin-right: 0.5rem;">💼</span>
+                                DRE - Demonstração do Resultado do Exercício
+                            </h3>
+                            <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+                                Income Statement following Brazilian accounting standards
+                            </p>
+                            <button
+                                id="generateDRE"
+                                class="btn-primary"
+                                style="width: 100%; padding: 0.75rem 1rem; font-size: 0.9rem;"
+                                onclick="generateDREReport()">
+                                📊 Generate DRE Report
+                            </button>
+                        </div>
+
+                        <!-- Balanço Patrimonial -->
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); border-left: 4px solid #48bb78;">
+                            <h3 style="margin-bottom: 1rem; color: #2d3748; display: flex; align-items: center;">
+                                <span style="margin-right: 0.5rem;">⚖️</span>
+                                Balanço Patrimonial
+                            </h3>
+                            <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+                                Balance Sheet following Brazilian accounting standards
+                            </p>
+                            <button
+                                class="btn-primary"
+                                style="width: 100%; padding: 0.75rem 1rem; font-size: 0.9rem;"
+                                onclick="generateBalanceSheetReport()">
+                                ⚖️ Generate Balance Sheet
+                            </button>
+                        </div>
+
+                        <!-- DFC - Demonstração de Fluxo de Caixa -->
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); border-left: 4px solid #ed8936;">
+                            <h3 style="margin-bottom: 1rem; color: #2d3748; display: flex; align-items: center;">
+                                <span style="margin-right: 0.5rem;">💰</span>
+                                DFC - Demonstração de Fluxo de Caixa
+                            </h3>
+                            <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+                                Cash Flow Statement following Brazilian accounting standards
+                            </p>
+                            <button
+                                class="btn-primary"
+                                style="width: 100%; padding: 0.75rem 1rem; font-size: 0.9rem;"
+                                onclick="generateCashFlowReport()">
+                                💰 Generate Cash Flow Report
+                            </button>
+                        </div>
+
+                        <!-- DMPL -->
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); border-left: 4px solid #9f7aea;">
+                            <h3 style="margin-bottom: 1rem; color: #2d3748; display: flex; align-items: center;">
+                                <span style="margin-right: 0.5rem;">📈</span>
+                                DMPL - Demonstração das Mutações do PL
+                            </h3>
+                            <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+                                Statement of Changes in Equity following Brazilian accounting standards
+                            </p>
+                            <button
+                                class="btn-primary"
+                                style="width: 100%; padding: 0.75rem 1rem; font-size: 0.9rem;"
+                                onclick="generateDMPLReport()">
+                                📈 Generate DMPL Report
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Report Options -->
+                    <div style="padding: 1rem 2rem; background: #f8f9fa; margin: 0 2rem; border-radius: 8px;">
+                        <h4 style="margin-bottom: 1rem; color: #2d3748;">📋 Report Options</h4>
+                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span>Company Name:</span>
+                                <input type="text" id="reportCompanyName" placeholder="Delta Mining" value="Delta Mining"
+                                       style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; width: 150px;">
+                            </label>
+                            <span style="color: #666; font-size: 0.9rem;">
+                                Reports will use the current dashboard filters (period, entity, dates)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center;">
+            <div style="width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <p>Loading financial data...</p>
+        </div>
+    </div>
+
+    <!-- DRE Preview Modal -->
+    <div id="drePreviewModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px; width: 90%;">
+            <div class="modal-header">
+                <h3>📊 Demonstração do Resultado do Exercício (DRE)</h3>
+                <span class="close" onclick="closeDREModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="drePreviewContent">
+                    <div class="dre-summary" style="margin-bottom: 2rem;">
+                        <h4 style="color: #2d3748; margin-bottom: 1rem;">📋 Resumo do Período</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 0.9rem; color: #666;">Receita Total</div>
+                                <div id="drePreviewRevenue" style="font-size: 1.2rem; font-weight: bold; color: #48bb78;">R$ 0,00</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 0.9rem; color: #666;">Lucro Bruto</div>
+                                <div id="drePreviewGrossProfit" style="font-size: 1.2rem; font-weight: bold; color: #4299e1;">R$ 0,00</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 0.9rem; color: #666;">Resultado Líquido</div>
+                                <div id="drePreviewNetIncome" style="font-size: 1.2rem; font-weight: bold;">R$ 0,00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dre-details" style="margin-bottom: 2rem;">
+                        <h4 style="color: #2d3748; margin-bottom: 1rem;">📈 Detalhes Financeiros</h4>
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #e2e8f0;">
+                                        <th style="text-align: left; padding: 0.75rem 0; color: #4a5568;">Item</th>
+                                        <th style="text-align: right; padding: 0.75rem 0; color: #4a5568;">Valor</th>
+                                        <th style="text-align: right; padding: 0.75rem 0; color: #4a5568;">% da Receita</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dreDetailsList">
+                                    <!-- Items will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="dre-period-info" style="background: #edf2f7; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <strong>Período:</strong> <span id="drePeriodInfo">-</span>
+                            </div>
+                            <div>
+                                <strong>Empresa:</strong> <span id="dreCompanyInfo">-</span>
+                            </div>
+                            <div>
+                                <strong>Gerado em:</strong> <span id="dreGeneratedAt">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: flex-end; padding: 1.5rem; border-top: 1px solid #e2e8f0;">
+                <button onclick="closeDREModal()" class="btn-secondary" style="padding: 0.75rem 1.5rem;">
+                    ❌ Fechar
+                </button>
+                <button onclick="downloadDREPDF()" class="btn-primary" style="padding: 0.75rem 1.5rem;">
+                    📄 Baixar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚠️ Error</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-overlay.show {
+            display: flex !important;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #2d3748;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #718096;
+            border: none;
+            background: none;
+        }
+
+        .close:hover {
+            color: #2d3748;
+        }
+
+        .btn-primary {
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #5a67d8;
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e0;
+        }
+    </style>
+
+    <script src="{{ url_for('static', filename='cfo_dashboard.js') }}?v={{ cache_buster }}"></script>
+</body>
+</html>

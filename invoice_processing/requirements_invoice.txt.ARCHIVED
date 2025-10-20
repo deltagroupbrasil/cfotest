@@ -1,0 +1,30 @@
+# Invoice Processing Module - Isolated Dependencies
+# These are ADDITIONAL to main requirements.txt
+
+# PDF Processing
+PyPDF2>=3.0.0
+pdfplumber>=0.7.0
+pdf2image>=1.16.0
+
+# OCR Capabilities
+pytesseract>=0.3.10
+Pillow>=10.0.0
+
+# Email Processing
+exchangelib>=4.9.0
+imapclient>=2.3.1
+
+# Document Intelligence (Enhanced Claude)
+anthropic>=0.8.0
+
+# File Type Detection
+python-magic>=0.4.27
+
+# Image Processing
+opencv-python>=4.8.0
+
+# MIME Handling
+python-email>=6.0.0
+
+# Async Processing (for email monitoring)
+asyncio>=3.4.3

@@ -1,0 +1,16 @@
+[run]
+source =
+    web_ui/database.py
+    web_ui/app.py
+    web_ui/smart_matching_criteria.py
+    database_utils.py
+    crypto_pricing.py
+omit =
+    */tests/*
+    */site-packages/*
+    */AppData/Roaming/Python/*
+
+[report]
+show_missing = True
+skip_covered = False
+fail_under = 50

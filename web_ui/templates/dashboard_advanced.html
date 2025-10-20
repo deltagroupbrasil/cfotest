@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta CFO Agent - Advanced Transaction Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_advanced.css') }}?v={{ cache_buster }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <h2>Delta CFO Agent</h2>
+                <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Delta's proprietary self improving AI CFO Agent</p>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/dashboard" class="nav-link active">Expenses</a>
+                <a href="/revenue" class="nav-link">Revenue Recognition</a>
+                <a href="/cfo-dashboard" class="nav-link">Reports</a>
+                <a href="/invoices" class="nav-link">Invoices</a>
+                <a href="/files" class="nav-link">File Manager</a>
+            </div>
+        </nav>
+
+        <!-- Revenue Sync Notification Banner -->
+        <div id="revenueSyncNotification" class="sync-notification" style="display: none;">
+            <div class="sync-notification-content">
+                <span class="sync-icon">✅</span>
+                <div class="sync-message">
+                    <strong>Revenue Recognition Update:</strong>
+                    <span id="syncMessage"></span>
+                </div>
+                <div class="sync-actions">
+                    <button class="btn-link" onclick="viewSyncDetails()">View Details</button>
+                    <button class="btn-link" onclick="dismissSyncNotification()">Dismiss</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="dashboard-content">
+                <header>
+                    <h1>Advanced Transaction Dashboard</h1>
+                    <div class="stats-summary">
+                        <div class="stat-card">
+                            <h3>Total Transactions</h3>
+                            <div class="stat-number">{{ stats.total_transactions }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Revenue</h3>
+                            <div class="stat-number positive">${{ "%.2f"|format(stats.total_revenue) }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Expenses</h3>
+                            <div class="stat-number negative">${{ "%.2f"|format(stats.total_expenses) }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Needs Review</h3>
+                            <div class="stat-number warning">{{ stats.needs_review }}</div>
+                        </div>
+                    </div>
+                    <div class="date-range">
+                        📅 Data Range: {{ stats.date_range.min }} to {{ stats.date_range.max }}
+                    </div>
+                </header>
+
+        <!-- Filter Controls -->
+        <div class="filter-section">
+            <h2>🔍 Advanced Filters</h2>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="entityFilter">Business Entity:</label>
+                    <select id="entityFilter">
+                        <option value="">All Entities</option>
+                        {% for entity, count in stats.entities %}
+                        <option value="{{ entity }}">{{ entity }} ({{ count }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="transactionType">Transaction Type:</label>
+                    <select id="transactionType">
+                        <option value="">All Types</option>
+                        <option value="Revenue">Revenue Only</option>
+                        <option value="Expense">Expenses Only</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="sourceFile">Source File:</label>
+                    <select id="sourceFile">
+                        <option value="">All Sources</option>
+                        {% for source, count in stats.source_files %}
+                        <option value="{{ source }}">{{ source|truncate(30) }} ({{ count }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="needsReview">Review Status:</label>
+                    <select id="needsReview">
+                        <option value="">All Transactions</option>
+                        <option value="true">Needs Review Only</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="minAmount">Min Amount ($):</label>
+                    <input type="number" id="minAmount" step="0.01" placeholder="0.00">
+                </div>
+
+                <div class="filter-group">
+                    <label for="maxAmount">Max Amount ($):</label>
+                    <input type="number" id="maxAmount" step="0.01" placeholder="No limit">
+                </div>
+
+                <div class="filter-group">
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" id="startDate">
+                </div>
+
+                <div class="filter-group">
+                    <label for="endDate">End Date:</label>
+                    <input type="date" id="endDate">
+                </div>
+
+                <div class="filter-group">
+                    <label for="keywordFilter">Keyword Search:</label>
+                    <input type="text" id="keywordFilter" placeholder="Search transaction descriptions...">
+                </div>
+            </div>
+
+            <div class="quick-filters">
+                <h3>🔍 Quick Filters:</h3>
+                <button id="filterTodos" class="btn-quick todo-filter">📝 To Do's Only</button>
+                <button id="filter2025" class="btn-quick">2025 Full Year</button>
+                <button id="filter2024" class="btn-quick">2024 Full Year</button>
+                <button id="filterYTD" class="btn-quick">2025 YTD</button>
+            </div>
+
+            <button id="applyFilters" class="btn-primary">Apply Filters</button>
+            <button id="clearFilters" class="btn-secondary">Clear All</button>
+        </div>
+
+        <!-- Transaction Table -->
+        <div class="table-section">
+            <div class="table-header">
+                <h2>📋 Advanced Transaction Management</h2>
+                <div class="table-info">
+                    <span id="tableInfo">Loading...</span>
+                    <button id="refreshData" class="btn-secondary">🔄 Refresh</button>
+                    <button id="runInvoiceMatching" class="btn-primary" onclick="runInvoiceMatching()">💰 Run Invoice Matching</button>
+                    <button id="runBlockchainEnrichment" class="btn-primary" onclick="runBlockchainEnrichment()">🔗 Enrich Blockchain Transactions</button>
+                    <button id="exportCSV" class="btn-secondary">📥 Export CSV</button>
+                    <button id="archiveSelected" class="btn-secondary" style="display: none;">🗄️ Archive Selected</button>
+                    <button id="showArchived" class="btn-secondary">📦 Show Archived</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="transactionTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAll"></th>
+                            <th class="sortable" data-sort="date">Date ↕</th>
+                            <th class="sortable" data-sort="origin">Origin ↕</th>
+                            <th class="sortable" data-sort="destination">Destination ↕</th>
+                            <th class="sortable" data-sort="description">Description ↕</th>
+                            <th class="sortable" data-sort="amount">Amount ↕</th>
+                            <th>Crypto</th>
+                            <th class="sortable" data-sort="classified_entity">Entity ↕</th>
+                            <th class="sortable" data-sort="accounting_category">Primary Category ↕</th>
+                            <th class="sortable" data-sort="subcategory">Subcategory ↕</th>
+                            <th>Justification</th>
+                            <th class="sortable" data-sort="confidence">Confidence ↕</th>
+                            <th class="sortable" data-sort="source_file">Source ↕</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                        <tr>
+                            <td colspan="14" class="loading">Loading transactions...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container">
+                <div class="pagination">
+                    <button id="prevPage" class="btn-pagination" disabled>← Previous</button>
+                    <span id="pageInfo">Page 1 of 1</span>
+                    <button id="nextPage" class="btn-pagination" disabled>Next →</button>
+                </div>
+                <div class="pagination-size-selector">
+                    <label for="perPageSelector">Per page:</label>
+                    <div class="btn-group">
+                        <button class="btn-per-page active" data-per-page="50">50</button>
+                        <button class="btn-per-page" data-per-page="100">100</button>
+                        <button class="btn-per-page" data-per-page="999999">All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Suggestions Modal -->
+    <div id="suggestionsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🤖 AI Smart Recommendations</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="suggestionsContent">
+                    <!-- Transaction info -->
+                    <div id="suggestionTransactionInfo" style="margin-bottom: 20px; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                        <p><strong>Transaction:</strong> <span id="suggestionDescription"></span></p>
+                        <p><strong>Amount:</strong> <span id="suggestionAmount"></span></p>
+                        <p><strong>Current Confidence:</strong> <span id="suggestionCurrentConfidence"></span></p>
+                    </div>
+
+                    <!-- AI Assessment -->
+                    <div id="suggestionAssessment" style="margin-bottom: 20px; padding: 10px; background: #e8f4f8; border-radius: 4px; display: none;">
+                        <p><strong>AI Assessment:</strong></p>
+                        <p id="suggestionReasoning" style="margin: 10px 0;"></p>
+                        <p><strong>New Confidence:</strong> <span id="suggestionNewConfidence"></span></p>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                            <span id="suggestionContext"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <div id="suggestionsList">
+                    <div class="loading">Loading AI suggestions...</div>
+                </div>
+
+                <div id="suggestionsError" style="display: none; padding: 10px; background: #fee; border-radius: 4px; color: #c33;">
+                    <p id="suggestionsErrorMessage"></p>
+                </div>
+
+                <div id="suggestionsEmpty" style="display: none; padding: 10px; background: #efe; border-radius: 4px; color: #363;">
+                    <p>✅ No improvements needed! The AI is confident with the current classification.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Duplicate Resolution Modal -->
+    <div id="duplicateModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3>🔍 Duplicate Transactions Detected</h3>
+                <span class="close" onclick="closeDuplicateModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="duplicateInfo">
+                    <p class="duplicate-summary"></p>
+
+                    <div class="comparison-info" style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <h4>📊 Classification Comparison</h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #e0e0e0;">
+                                    <th style="padding: 10px; text-align: left;">Date</th>
+                                    <th style="padding: 10px; text-align: right;">Amount</th>
+                                    <th style="padding: 10px; text-align: left;">Description</th>
+                                    <th style="padding: 10px; text-align: left;">Old → New Category</th>
+                                    <th style="padding: 10px; text-align: center;">Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="duplicateComparisonTable">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="action-buttons" style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+                        <button class="btn-primary" onclick="resolveDuplicates('overwrite')" style="padding: 15px 30px; font-size: 16px;">
+                            ✅ Overwrite with Latest Business Knowledge
+                        </button>
+                        <button class="btn-secondary" onclick="resolveDuplicates('discard')" style="padding: 15px 30px; font-size: 16px;">
+                            🚫 Discard Upload & Keep Existing
+                        </button>
+                    </div>
+
+                    <div class="duplicate-details" style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px;">
+                        <h4>ℹ️ What happens with each option?</h4>
+                        <ul>
+                            <li><strong>Overwrite:</strong> Deletes old transactions and replaces them with newly processed data using your latest business knowledge and improved Origin/Destination mapping.</li>
+                            <li><strong>Discard:</strong> Cancels the upload and keeps your existing transactions unchanged.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Matching Modal -->
+    <div id="invoiceMatchingModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 1200px;">
+            <div class="modal-header">
+                <h3>💰 Invoice Matching Results</h3>
+                <span class="close" onclick="closeInvoiceMatchingModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Loading State -->
+                <div id="matchingLoading" style="display: none; text-align: center; padding: 40px;">
+                    <div class="loading">Running invoice matching algorithm...</div>
+                    <p style="margin-top: 20px; color: #666;">Analyzing transactions and invoices to find potential matches...</p>
+                </div>
+
+                <!-- Results Summary -->
+                <div id="matchingSummary" style="display: none; background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4>📊 Matching Summary</h4>
+                    <p><strong>Total Matches Found:</strong> <span id="totalMatchesCount">0</span></p>
+                    <p style="font-size: 0.9em; color: #666;">Review each match below and accept or reject based on your assessment.</p>
+                </div>
+
+                <!-- Matches Table -->
+                <div id="matchesContainer" style="display: none;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                        <thead>
+                            <tr style="background: #f0f0f0;">
+                                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Invoice</th>
+                                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Transaction</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Match Score</th>
+                                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Explanation</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matchesTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="matchesEmpty" style="display: none; text-align: center; padding: 40px; background: #f9f9f9; border-radius: 8px;">
+                    <p style="font-size: 1.2em; color: #666;">✅ No new matches found</p>
+                    <p style="color: #999;">All invoices are either already matched or have no corresponding transactions.</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="matchesError" style="display: none; padding: 20px; background: #fee; border-radius: 8px; color: #c33;">
+                    <p><strong>⚠️ Error running invoice matching:</strong></p>
+                    <p id="matchesErrorMessage"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Sync Notification Script -->
+    <script>
+        // Revenue Sync Notification System
+        let syncNotificationData = null;
+
+        // Check for sync notification on page load
+        async function checkRevenueSyncNotification() {
+            try {
+                const response = await fetch('/api/revenue/sync-notification');
+                const data = await response.json();
+
+                if (data.success && data.has_notification) {
+                    syncNotificationData = data.notification;
+                    showSyncNotification(data.notification);
+                }
+            } catch (error) {
+                console.error('Error checking sync notification:', error);
+            }
+        }
+
+        // Show the sync notification banner
+        function showSyncNotification(notification) {
+            const banner = document.getElementById('revenueSyncNotification');
+            const message = document.getElementById('syncMessage');
+
+            const count = notification.count;
+            const timestamp = new Date(notification.timestamp).toLocaleString();
+
+            message.textContent = `${count} transaction${count > 1 ? 's were' : ' was'} matched to invoices and reclassified as Revenue.`;
+
+            banner.style.display = 'block';
+
+            // Auto-hide after 30 seconds
+            setTimeout(() => {
+                if (banner.style.display !== 'none') {
+                    dismissSyncNotification();
+                }
+            }, 30000);
+        }
+
+        // View sync details (show modal or redirect)
+        function viewSyncDetails() {
+            if (syncNotificationData && syncNotificationData.changes) {
+                const changes = syncNotificationData.changes;
+
+                // Create details modal
+                const details = changes.map(change =>
+                    `• ${change.date}: ${change.description} ($${change.amount}) → ${change.invoice_number}`
+                ).join('\n');
+
+                alert(`Revenue Recognition Updates:\n\n${details}\n\nAll ${syncNotificationData.count} transactions have been reclassified as Revenue.`);
+            }
+
+            // Optionally refresh the table to show updated data
+            if (typeof loadTransactions === 'function') {
+                loadTransactions();
+            }
+        }
+
+        // Dismiss the notification
+        async function dismissSyncNotification() {
+            const banner = document.getElementById('revenueSyncNotification');
+            banner.style.display = 'none';
+
+            // Call API to dismiss on server
+            try {
+                await fetch('/api/revenue/dismiss-sync-notification', {
+                    method: 'POST'
+                });
+            } catch (error) {
+                console.error('Error dismissing notification:', error);
+            }
+        }
+
+        // Trigger sync on page load (background operation)
+        async function triggerRevenueSync() {
+            try {
+                // Sync runs in background, we'll check for notification after
+                await fetch('/api/revenue/sync-classifications', {
+                    method: 'POST'
+                });
+
+                // Check if notification was created
+                await checkRevenueSyncNotification();
+            } catch (error) {
+                console.error('Error triggering revenue sync:', error);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Trigger sync first
+            triggerRevenueSync();
+        });
+    </script>
+
+    <style>
+        /* Revenue Sync Notification Styles */
+        .sync-notification {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            margin: 0 0 1rem 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sync-notification-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .sync-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .sync-message {
+            flex-grow: 1;
+        }
+
+        .sync-message strong {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .sync-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .btn-link {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+
+    <script src="{{ url_for('static', filename='script_advanced.js') }}?v={{ cache_buster }}"></script>
+</body>
+</html>

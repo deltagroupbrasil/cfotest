@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta Capital Holdings - Business Overview</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_advanced.css') }}?v={{ cache_buster }}">
+    <style>
+        /* Business Overview Specific Styles */
+        .hero-business {
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 50%, #1e3a8a 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-business::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .company-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .company-tagline {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #e0e7ff;
+            font-weight: 400;
+        }
+
+        .company-description {
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+            color: #f1f5f9;
+        }
+
+        /* Holdings Grid */
+        .holdings-section {
+            padding: 4rem 2rem;
+            background: #f8fafc;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-bottom: 3rem;
+        }
+
+        .holdings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .holding-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .holding-card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .holding-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .holding-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-right: 1rem;
+            font-weight: bold;
+        }
+
+        .holding-name {
+            flex: 1;
+        }
+
+        .holding-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: #1e293b;
+        }
+
+        .holding-type {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .holding-description {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .holding-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .holding-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-development {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Business Structure Diagram */
+        .structure-section {
+            padding: 4rem 2rem;
+            background: white;
+        }
+
+        .org-chart {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .org-level {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .org-box {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            position: relative;
+        }
+
+        .org-box.subsidiary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .org-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .org-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .org-subsidiaries {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        /* Connection lines */
+        .org-level::after {
+            content: '';
+            position: absolute;
+            bottom: -1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 1.5rem;
+            background: #cbd5e1;
+        }
+
+        .org-level:last-child::after {
+            display: none;
+        }
+
+        /* Key Metrics Section */
+        .metrics-section {
+            padding: 4rem 2rem;
+            background: #1e293b;
+            color: white;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .metric-card {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .metric-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-title {
+            font-size: 1rem;
+            color: #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .company-title {
+                font-size: 2.5rem;
+            }
+
+            .holdings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .org-subsidiaries {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <h2>Delta CFO Agent</h2>
+                <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Delta's proprietary self improving AI CFO Agent</p>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="/dashboard" class="nav-link">Expenses</a>
+                <a href="/revenue" class="nav-link">Revenue Recognition</a>
+                <a href="/cfo-dashboard" class="nav-link">Reports</a>
+                <a href="/invoices" class="nav-link">Invoices</a>
+                <a href="/files" class="nav-link">File Manager</a>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero-business">
+            <div class="hero-content">
+                <h1 class="company-title">Delta Capital Holdings</h1>
+                <p class="company-tagline">Diversified Technology & Innovation Portfolio</p>
+                <p class="company-description">
+                    A strategic holding company focused on emerging technologies, artificial intelligence,
+                    and digital transformation solutions. We build, acquire, and scale innovative businesses
+                    that shape the future of technology and commerce.
+                </p>
+            </div>
+        </section>
+
+        <!-- Key Metrics -->
+        <section class="metrics-section">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-number">7</div>
+                    <div class="metric-title">Portfolio Companies</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">$2.4M</div>
+                    <div class="metric-title">Assets Under Management</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">3</div>
+                    <div class="metric-title">Active Verticals</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">24+</div>
+                    <div class="metric-title">Team Members</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Holdings Portfolio -->
+        <section class="holdings-section">
+            <h2 class="section-title">Our Portfolio</h2>
+            <p class="section-subtitle">Strategic investments across technology, AI, and digital innovation</p>
+
+            <div class="holdings-grid">
+                <!-- Delta Prop Shop -->
+                <div class="holding-card">
+                    <div class="holding-header">
+                        <div class="holding-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+                            🏪
+                        </div>
+                        <div class="holding-name">
+                            <h3 class="holding-title">Delta Prop Shop</h3>
+                            <span class="holding-type">Retail Technology</span>
+                        </div>
+                        <span class="holding-status status-active">Active</span>
+                    </div>
+                    <p class="holding-description">
+                        E-commerce platform specializing in proprietary trading merchandise and financial education products.
+                        Combines retail operations with educational content delivery for trading enthusiasts.
+                    </p>
+                    <div class="holding-metrics">
+                        <div class="metric">
+                            <div class="metric-value">$89K</div>
+                            <div class="metric-label">Revenue</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">2.1K</div>
+                            <div class="metric-label">Customers</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chase Bank Integration -->
+                <div class="holding-card">
+                    <div class="holding-header">
+                        <div class="holding-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white;">
+                            🏦
+                        </div>
+                        <div class="holding-name">
+                            <h3 class="holding-title">Banking Solutions</h3>
+                            <span class="holding-type">Financial Technology</span>
+                        </div>
+                        <span class="holding-status status-active">Active</span>
+                    </div>
+                    <p class="holding-description">
+                        Advanced financial data integration and processing systems. Automated transaction categorization
+                        and financial reporting tools for enterprise banking operations.
+                    </p>
+                    <div class="holding-metrics">
+                        <div class="metric">
+                            <div class="metric-value">1.4K</div>
+                            <div class="metric-label">Transactions</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">94%</div>
+                            <div class="metric-label">Accuracy</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI-Powered CFO Agent -->
+                <div class="holding-card">
+                    <div class="holding-header">
+                        <div class="holding-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
+                            🤖
+                        </div>
+                        <div class="holding-name">
+                            <h3 class="holding-title">Delta CFO Agent</h3>
+                            <span class="holding-type">AI Financial Services</span>
+                        </div>
+                        <span class="holding-status status-active">Active</span>
+                    </div>
+                    <p class="holding-description">
+                        AI-powered financial intelligence platform providing automated bookkeeping, transaction classification,
+                        and real-time financial insights for businesses of all sizes.
+                    </p>
+                    <div class="holding-metrics">
+                        <div class="metric">
+                            <div class="metric-value">50+</div>
+                            <div class="metric-label">Clients</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">99.2%</div>
+                            <div class="metric-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cryptocurrency Operations -->
+                <div class="holding-card">
+                    <div class="holding-header">
+                        <div class="holding-icon" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white;">
+                            ₿
+                        </div>
+                        <div class="holding-name">
+                            <h3 class="holding-title">Crypto Trading</h3>
+                            <span class="holding-type">Digital Assets</span>
+                        </div>
+                        <span class="holding-status status-active">Active</span>
+                    </div>
+                    <p class="holding-description">
+                        Strategic cryptocurrency trading and mining operations across Bitcoin, Ethereum, and emerging altcoins.
+                        Focus on DeFi protocols and blockchain infrastructure investments.
+                    </p>
+                    <div class="holding-metrics">
+                        <div class="metric">
+                            <div class="metric-value">12</div>
+                            <div class="metric-label">Assets</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">$430K</div>
+                            <div class="metric-label">Portfolio</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Processing System -->
+                <div class="holding-card">
+                    <div class="holding-header">
+                        <div class="holding-icon" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                            📄
+                        </div>
+                        <div class="holding-name">
+                            <h3 class="holding-title">Invoice Processing</h3>
+                            <span class="holding-type">Document Intelligence</span>
+                        </div>
+                        <span class="holding-status status-development">Development</span>
+                    </div>
+                    <p class="holding-description">
+                        AI-powered invoice processing and revenue recognition system. Automated document extraction,
+                        classification, and integration with accounting systems for enterprise clients.
+                    </p>
+                    <div class="holding-metrics">
+                        <div class="metric">
+                            <div class="metric-value">500+</div>
+                            <div class="metric-label">Documents</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">87%</div>
+                            <div class="metric-label">Automation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gateway Services -->
+                <div class="holding-card">
+                    <div class="holding-header">
+                        <div class="holding-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white;">
+                            🌐
+                        </div>
+                        <div class="holding-name">
+                            <h3 class="holding-title">Gateway Services</h3>
+                            <span class="holding-type">Payment Infrastructure</span>
+                        </div>
+                        <span class="holding-status status-active">Active</span>
+                    </div>
+                    <p class="holding-description">
+                        Payment gateway and financial infrastructure services enabling secure transactions and payment processing
+                        for digital commerce platforms and fintech applications.
+                    </p>
+                    <div class="holding-metrics">
+                        <div class="metric">
+                            <div class="metric-value">$28K</div>
+                            <div class="metric-label">Processed</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">99.8%</div>
+                            <div class="metric-label">Success Rate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Internal Operations -->
+                <div class="holding-card">
+                    <div class="holding-header">
+                        <div class="holding-icon" style="background: linear-gradient(135deg, #64748b, #475569); color: white;">
+                            ⚙️
+                        </div>
+                        <div class="holding-name">
+                            <h3 class="holding-title">Internal Operations</h3>
+                            <span class="holding-type">Corporate Services</span>
+                        </div>
+                        <span class="holding-status status-active">Active</span>
+                    </div>
+                    <p class="holding-description">
+                        Centralized operations management including accounting, HR, legal, and administrative services
+                        supporting all portfolio companies and strategic initiatives.
+                    </p>
+                    <div class="holding-metrics">
+                        <div class="metric">
+                            <div class="metric-value">7</div>
+                            <div class="metric-label">Departments</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">100%</div>
+                            <div class="metric-label">Compliance</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Business Structure -->
+        <section class="structure-section">
+            <h2 class="section-title">Organizational Structure</h2>
+            <p class="section-subtitle">How our portfolio companies are organized and interconnected</p>
+
+            <div class="org-chart">
+                <div class="org-level">
+                    <div class="org-box">
+                        <div class="org-title">Delta Capital Holdings LLC</div>
+                        <div class="org-subtitle">Parent Company & Strategic Direction</div>
+                    </div>
+                </div>
+
+                <div class="org-level">
+                    <div class="org-subsidiaries">
+                        <div class="org-box subsidiary">
+                            <div class="org-title">Technology Division</div>
+                            <div class="org-subtitle">AI, FinTech & SaaS</div>
+                        </div>
+                        <div class="org-box subsidiary">
+                            <div class="org-title">Trading Division</div>
+                            <div class="org-subtitle">Crypto & Digital Assets</div>
+                        </div>
+                        <div class="org-box subsidiary">
+                            <div class="org-title">Commerce Division</div>
+                            <div class="org-subtitle">E-commerce & Retail</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wallet Management Section -->
+        <section class="holdings-section" id="wallet-management" style="padding-top: 2rem;">
+            <h2 class="section-title">🔐 Wallet Address Management</h2>
+            <p class="section-subtitle">Manage known cryptocurrency wallet addresses for accurate transaction classification</p>
+
+            <!-- Add Wallet Form -->
+            <div style="background: white; padding: 2rem; border-radius: 12px; margin: 2rem auto; max-width: 1400px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+                <h3 style="color: #3b82f6; margin-bottom: 1.5rem; font-size: 1.3rem;">➕ Add New Wallet</h3>
+                <form id="addWalletForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Wallet Address *</label>
+                        <input type="text" id="walletAddress" name="wallet_address" required
+                               placeholder="0x..."
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px; font-family: monospace;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Entity Name *</label>
+                        <input type="text" id="entityName" name="entity_name" required
+                               placeholder="e.g., Coinbase Exchange"
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Wallet Type *</label>
+                        <select id="walletType" name="wallet_type" required
+                                style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px;">
+                            <option value="">Select type...</option>
+                            <option value="internal">Internal (Company Owned)</option>
+                            <option value="exchange">Exchange</option>
+                            <option value="customer">Customer</option>
+                            <option value="vendor">Vendor</option>
+                            <option value="partner">Partner</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Purpose</label>
+                        <input type="text" id="walletPurpose" name="purpose"
+                               placeholder="e.g., Primary trading wallet"
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">Notes</label>
+                        <textarea id="walletNotes" name="notes" rows="2"
+                                  placeholder="Optional notes about this wallet..."
+                                  style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 6px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <button type="submit" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 1rem 2rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: all 0.3s;">
+                            ✅ Add Wallet
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Wallets List -->
+            <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 1400px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+                <h3 style="color: #3b82f6; margin-bottom: 1.5rem; font-size: 1.3rem;">📋 Known Wallets (<span id="walletCount">0</span>)</h3>
+                <div id="walletsList" style="display: grid; gap: 1rem;">
+                    <!-- Wallets will be loaded here -->
+                    <div style="text-align: center; padding: 2rem; color: #999;">
+                        <p>Loading wallets...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Wallet Management JavaScript -->
+    <script>
+        // Load wallets on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWallets();
+        });
+
+        // Add wallet form submission
+        document.getElementById('addWalletForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                wallet_address: document.getElementById('walletAddress').value.trim(),
+                entity_name: document.getElementById('entityName').value.trim(),
+                wallet_type: document.getElementById('walletType').value,
+                purpose: document.getElementById('walletPurpose').value.trim(),
+                notes: document.getElementById('walletNotes').value.trim()
+            };
+
+            try {
+                const response = await fetch('/api/wallets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('✅ Wallet added successfully!');
+                    document.getElementById('addWalletForm').reset();
+                    loadWallets();
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Failed to add wallet'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        });
+
+        // Load and display wallets
+        async function loadWallets() {
+            try {
+                const response = await fetch('/api/wallets');
+                const result = await response.json();
+
+                if (result.success && result.wallets) {
+                    displayWallets(result.wallets);
+                } else {
+                    document.getElementById('walletsList').innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;"><p>No wallets found</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('walletsList').innerHTML = '<div style="text-align: center; padding: 2rem; color: #e53e3e;"><p>Error loading wallets: ' + error.message + '</p></div>';
+            }
+        }
+
+        // Display wallets in the list
+        function displayWallets(wallets) {
+            const walletsList = document.getElementById('walletsList');
+            const walletCount = document.getElementById('walletCount');
+
+            walletCount.textContent = wallets.length;
+
+            if (wallets.length === 0) {
+                walletsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;"><p>No wallets added yet. Add your first wallet above!</p></div>';
+                return;
+            }
+
+            walletsList.innerHTML = wallets.map(wallet => `
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid ${getWalletTypeColor(wallet.wallet_type)}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="background: ${getWalletTypeColor(wallet.wallet_type)}; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">
+                                    ${wallet.wallet_type}
+                                </span>
+                                <h4 style="margin: 0; color: #1e293b; font-size: 1.1rem; font-weight: 700;">${wallet.entity_name}</h4>
+                            </div>
+                            <p style="margin: 0.5rem 0; font-family: monospace; color: #3b82f6; font-size: 0.9rem; word-break: break-all;">
+                                ${wallet.wallet_address}
+                            </p>
+                            ${wallet.purpose ? `<p style="margin: 0.5rem 0; color: #475569; font-size: 0.9rem;">📝 ${wallet.purpose}</p>` : ''}
+                            ${wallet.notes ? `<p style="margin: 0.5rem 0; color: #64748b; font-size: 0.85rem; font-style: italic;">${wallet.notes}</p>` : ''}
+                            <p style="margin: 0.5rem 0 0 0; color: #94a3b8; font-size: 0.75rem;">
+                                Added: ${new Date(wallet.created_at).toLocaleString()}
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="deleteWallet('${wallet.id}')"
+                                    style="background: #dc2626; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.3s;">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get color based on wallet type
+        function getWalletTypeColor(type) {
+            const colors = {
+                'internal': '#3b82f6',
+                'exchange': '#10b981',
+                'customer': '#06b6d4',
+                'vendor': '#f59e0b',
+                'partner': '#8b5cf6'
+            };
+            return colors[type] || '#6b7280';
+        }
+
+        // Delete wallet
+        async function deleteWallet(walletId) {
+            if (!confirm('Are you sure you want to delete this wallet? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/wallets/${walletId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('✅ Wallet deleted successfully!');
+                    loadWallets();
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Failed to delete wallet'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

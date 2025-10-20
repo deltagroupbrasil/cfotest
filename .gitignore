@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# CSV backup files
+*_backup*.csv
+*.csv.backup
+*.csv.pre_migration
+MASTER_TRANSACTIONS_*.csv
+
+# API Keys and sensitive data
+.anthropic_api_key
+.claude_api_key
+storage_config.json
+
+# Logs
+*.log
+processing_log.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Archive and backup directories
+archive/
+migration_backups/
+backup_files/
+
+# Node modules (if any)
+node_modules/
+../node_modules/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Crypto pricing database
+crypto_pricing.db
+
+# Transaction data (sensitive)
+raw_transactions/*.csv
+classified_transactions/*.csv
+ARCHIVED_TRANSACTIONS.csv
+
+# Examples and test data
+Examples Final Reports/
+.vercel

@@ -1,0 +1,9 @@
+Date,Description,Vendor,Amount,Currency,Category
+2024-09-22,Trading Platform,Coinbase Pro,500.00,USD,Trading
+2024-09-22,Transaction Fees,Coinbase Pro,25.00,USD,Trading
+Total,,,525.00,USD,
+Tax (5%),,,26.25,USD,
+Final Total,,,551.25,USD,
+Invoice Number,INV-CB-2024-002,,,
+Due Date,2024-10-22,,,
+Bill To,Delta Prop Shop LLC,,,

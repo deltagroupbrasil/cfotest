@@ -1,0 +1,17 @@
+# Analytics Service Requirements
+# Core web framework
+Flask>=2.0.0
+gunicorn>=20.1.0
+Werkzeug>=2.0.0
+
+# Database connectivity (PostgreSQL)
+psycopg2-binary>=2.9.0
+
+# Date/time utilities
+python-dateutil>=2.8.0
+
+# HTTP requests
+requests>=2.25.0
+
+# JSON processing (optional optimization)
+simplejson>=3.17.0

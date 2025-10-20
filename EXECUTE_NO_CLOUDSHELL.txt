@@ -1,0 +1,31 @@
+# EXECUTE ESTES COMANDOS NO CLOUD SHELL (onde você já fez o clone):
+
+# 1. Navegar para o diretório (se ainda não estiver)
+cd DeltaCFOAgent
+
+# 2. Remover Dockerfile temporariamente para usar Buildpacks automático
+mv Dockerfile Dockerfile.backup
+
+# 3. Deploy com Buildpacks (mais simples)
+gcloud run deploy deltacfoagent \
+  --source . \
+  --platform managed \
+  --region southamerica-east1 \
+  --allow-unauthenticated \
+  --memory 2Gi \
+  --cpu 2 \
+  --port 8080 \
+  --timeout 300 \
+  --max-instances 100 \
+  --set-env-vars="DB_TYPE=postgresql,DB_HOST=34.39.143.82,DB_PORT=5432,DB_NAME=delta_cfo,DB_USER=delta_user,DB_SOCKET_PATH=/cloudsql/aicfo-473816:southamerica-east1:delta-cfo-db,FLASK_ENV=production" \
+  --set-cloudsql-instances="aicfo-473816:southamerica-east1:delta-cfo-db" \
+  --set-secrets="DB_PASSWORD=db_password_sa:latest,ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest" \
+  --project=aicfo-473816
+
+# 4. Após deploy, testar
+SERVICE_URL=$(gcloud run services describe deltacfoagent --region southamerica-east1 --project=aicfo-473816 --format="value(status.url)")
+echo "🌐 Service URL: $SERVICE_URL"
+curl $SERVICE_URL/health
+
+# RESULTADO ESPERADO:
+# {"status": "healthy", "database": "PostgreSQL", "version": "2.0"}

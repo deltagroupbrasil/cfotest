@@ -1,0 +1,1408 @@
+/* Delta CFO Agent - Advanced Dashboard Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8fafc;
+    color: #1a202c;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Navigation */
+.top-nav {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.nav-brand h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Dashboard Header */
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: #2d3748;
+}
+
+.stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #667eea;
+}
+
+.stat-card h3 {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #718096;
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.stat-number.positive {
+    color: #38a169;
+}
+
+.stat-number.negative {
+    color: #e53e3e;
+}
+
+.stat-number.warning {
+    color: #f59e0b;
+    font-weight: 700;
+}
+
+.stat-number.warning {
+    color: #d69e2e;
+}
+
+.date-range {
+    background: #e2e8f0;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: center;
+    color: #4a5568;
+}
+
+/* Filter Section */
+.filter-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filter-section h2 {
+    margin-bottom: 1.5rem;
+    color: #2d3748;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.quick-filters {
+    margin-bottom: 1.5rem;
+}
+
+.quick-filters h3 {
+    margin-bottom: 1rem;
+    color: #4a5568;
+}
+
+.btn-quick {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-quick:hover {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-right: 1rem;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background: #5a67d8;
+}
+
+.btn-secondary {
+    background: #edf2f7;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e0;
+}
+
+/* Table Section */
+.table-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-header h2 {
+    color: #2d3748;
+}
+
+.table-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #718096;
+}
+
+.table-container {
+    overflow-x: auto;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f7fafc;
+}
+
+th,
+td {
+    padding: 1.25rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+th {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Sticky header only for the transaction table */
+#transactionTable th {
+    position: sticky;
+    top: 0;
+    background: #f7fafc;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Alternating row colors */
+tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+tbody tr:hover {
+    background-color: #e5e7eb !important;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.loading {
+    text-align: center;
+    color: #718096;
+    font-style: italic;
+}
+
+/* Inline Editing Styles */
+.editable-field {
+    position: relative;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.editable-field:hover {
+    background-color: #edf2f7;
+}
+
+.editable-field.editing {
+    background-color: #ebf8ff;
+    border: 1px solid #3182ce;
+}
+
+.inline-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+    padding: 0.25rem;
+}
+
+.inline-input:focus {
+    outline: none;
+}
+
+/* Removed AI suggestion buttons for cleaner UI */
+
+/* Transaction Type Color Coding */
+.transaction-type-revenue {
+    color: #22c55e;
+    font-weight: 600;
+}
+
+.transaction-type-expense {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+/* Entity Category Badges */
+.entity-category {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.entity-category {
+    background-color: #e2e8f0;
+    color: #475569;
+}
+
+.entity-category.revenue,
+.entity-category.expense,
+.entity-category.unclassified {
+    background-color: #e2e8f0;
+    color: #475569;
+}
+
+/* Currency Icons */
+.currency-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.currency-icon::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.currency-icon.crypto::before {
+    content: '₿';
+    font-weight: bold;
+    color: #f7931a;
+    background: none;
+}
+
+.currency-icon.fiat::before {
+    content: '$';
+    font-weight: bold;
+    color: #22c55e;
+    background: none;
+}
+
+/* Confidence Score Highlighting */
+.confidence-score {
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.confidence-high {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.confidence-medium {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.confidence-low {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Amount Formatting */
+.amount-positive {
+    color: #22c55e;
+    font-weight: 600;
+}
+
+.amount-negative {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+/* Improved Table Spacing and Column Widths */
+.table-container {
+    position: relative;
+}
+
+.table-container table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+/* Column width optimization */
+th:nth-child(1), td:nth-child(1) { /* Checkbox */
+    width: 40px;
+    min-width: 40px;
+    text-align: center;
+}
+
+th:nth-child(2), td:nth-child(2) { /* Date */
+    width: 90px;
+    min-width: 90px;
+}
+
+th:nth-child(3), td:nth-child(3), /* Origin */
+th:nth-child(4), td:nth-child(4) { /* Destination */
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+th:nth-child(5), td:nth-child(5) { /* Description */
+    width: 250px;
+    min-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+th:nth-child(6), td:nth-child(6) { /* Amount */
+    width: 100px;
+    text-align: right;
+}
+
+th:nth-child(7), td:nth-child(7) { /* Crypto */
+    width: 120px;
+    text-align: right;
+}
+
+th:nth-child(8), td:nth-child(8) { /* Entity */
+    width: 180px;
+    min-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+th:nth-child(9), td:nth-child(9) { /* Primary Category */
+    width: 180px;
+    min-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+th:nth-child(10), td:nth-child(10) { /* Subcategory */
+    width: 150px;
+    min-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+th:nth-child(11), td:nth-child(11) { /* Justification */
+    width: 200px;
+    min-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+th:nth-child(12), td:nth-child(12) { /* Confidence */
+    width: 90px;
+    text-align: center;
+}
+
+th:nth-child(13), td:nth-child(13) { /* Source */
+    width: 150px;
+    min-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+th:nth-child(14), td:nth-child(14) { /* Actions */
+    width: 120px;
+    text-align: center;
+}
+
+.table-container th:first-child,
+.table-container td:first-child {
+    padding-left: 1.5rem;
+}
+
+.table-container th:last-child,
+.table-container td:last-child {
+    padding-right: 1.5rem;
+}
+
+/* Text overflow handling */
+.description-cell,
+.source-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.crypto-cell {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    max-width: 700px;
+    width: 90%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content.similar-transactions-modal {
+    max-width: 800px;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    color: #2d3748;
+    margin: 0;
+}
+
+.close {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #718096;
+}
+
+.close:hover {
+    color: #2d3748;
+}
+
+.modal-body {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Similar Transactions Modal Specific Styles */
+.similar-selection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: #f7fafc;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.selection-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.selection-controls button {
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.selection-controls button:hover {
+    background: #edf2f7;
+    border-color: #a0aec0;
+}
+
+.selection-counter {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Category Selection Section */
+.category-selection {
+    padding: 1.5rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.category-selection h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #2d3748;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.category-btn {
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.category-btn:hover {
+    background: #4299e1;
+    color: white;
+    border-color: #4299e1;
+}
+
+.category-btn.selected {
+    background: #3182ce;
+    color: white;
+    border-color: #3182ce;
+}
+
+/* Transaction List */
+.transactions-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #f7fafc;
+    transition: all 0.2s;
+}
+
+.transaction-item:hover {
+    background-color: #f7fafc;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-checkbox {
+    width: 20px;
+    height: 20px;
+    margin-right: 1rem;
+    cursor: pointer;
+}
+
+.transaction-details {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.transaction-info {
+    flex: 1;
+}
+
+.transaction-date {
+    font-size: 0.75rem;
+    color: #718096;
+    margin-bottom: 0.25rem;
+}
+
+.transaction-description {
+    font-size: 0.875rem;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 400px;
+}
+
+.transaction-description.full {
+    white-space: normal;
+    max-width: none;
+}
+
+.transaction-meta {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #718096;
+}
+
+.transaction-amount {
+    font-weight: 600;
+    color: #2d3748;
+    min-width: 80px;
+    text-align: right;
+}
+
+.transaction-amount.positive {
+    color: #48bb78;
+}
+
+.transaction-amount.negative {
+    color: #f56565;
+}
+
+/* Update Preview */
+.update-preview {
+    padding: 1rem 1.5rem;
+    background: #edf7ff;
+    border: 1px solid #90cdf4;
+    border-radius: 8px;
+    margin: 1.5rem;
+}
+
+.update-preview h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #2b6cb0;
+}
+
+.update-preview p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+    color: #2c5282;
+}
+
+/* Modal Footer Actions */
+.modal-actions {
+    padding: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    background: #f7fafc;
+}
+
+.btn-secondary {
+    padding: 0.625rem 1.5rem;
+    background: white;
+    color: #4a5568;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #f7fafc;
+    border-color: #a0aec0;
+}
+
+.btn-primary {
+    padding: 0.625rem 1.5rem;
+    background: #3182ce;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background: #2c5282;
+}
+
+.btn-primary:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+}
+
+.suggestion-item {
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.suggestion-item:hover {
+    background-color: #f7fafc;
+    border-color: #cbd5e0;
+}
+
+/* Pagination */
+.pagination-container {
+    padding: 1rem 2rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-pagination {
+    background: #edf2f7;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-pagination:hover:not(:disabled) {
+    background: #e2e8f0;
+}
+
+.btn-pagination:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#pageInfo {
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.pagination-size-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pagination-size-selector label {
+    color: #4a5568;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.btn-group {
+    display: flex;
+    gap: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-per-page {
+    background: #ffffff;
+    color: #4a5568;
+    border: none;
+    border-right: 1px solid #e2e8f0;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.btn-per-page:last-child {
+    border-right: none;
+}
+
+.btn-per-page:hover:not(.active) {
+    background: #f7fafc;
+}
+
+.btn-per-page.active {
+    background: #667eea;
+    color: white;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1001;
+}
+
+.toast {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.5rem;
+    min-width: 300px;
+    border-left: 4px solid #38a169;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast.error {
+    border-left-color: #e53e3e;
+}
+
+.toast.warning {
+    border-left-color: #d69e2e;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .stats-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .top-nav {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .table-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .pagination-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .pagination-size-selector {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Amount styling */
+.amount-positive {
+    color: #38a169;
+    font-weight: 600;
+}
+
+.amount-negative {
+    color: #e53e3e;
+    font-weight: 600;
+}
+
+/* Confidence styling */
+.confidence-high {
+    color: #38a169;
+    font-weight: 600;
+}
+
+.confidence-medium {
+    color: #d69e2e;
+    font-weight: 600;
+}
+
+.confidence-low {
+    color: #e53e3e;
+    font-weight: 600;
+}
+/* Sortable column styles */
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.sortable:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+
+/* Smart button styles */
+.smart-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    cursor: pointer;
+    margin-left: 4px;
+}
+
+.smart-btn:hover {
+    background: #5a67d8;
+}
+
+
+/* Amount color coding */
+.amount-positive {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.amount-negative {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Smart dropdown indicator */
+.smart-dropdown::after {
+    font-size: 10px;
+    margin-left: 4px;
+    opacity: 0.6;
+}
+
+/* Custom input section in AI suggestions modal */
+.custom-input-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.custom-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.custom-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.apply-custom-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.apply-custom-btn:hover {
+    background: #218838;
+}
+
+/* Enhanced AI Suggestion Modal Styles */
+.ai-suggestion-header h3 {
+    color: #007bff;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.ai-recommendation-section {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.ai-recommendation-section h4 {
+    color: #007bff;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.standardized-recommendation {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.transaction-selection {
+    margin: 20px 0;
+}
+
+.select-all-container {
+    background: #e9ecef;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    margin-bottom: 10px;
+    position: relative;
+    padding-left: 25px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 18px;
+    width: 18px;
+    background-color: #fff;
+    border: 2px solid #ddd;
+    border-radius: 3px;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+    border-color: #007bff;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.checkbox-container .checkmark:after {
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.similar-transactions-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.transaction-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 12px 0;
+    margin-bottom: 0;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-details {
+    margin-left: 0;
+    flex: 1;
+}
+
+.transaction-date {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.transaction-description {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.transaction-confidence {
+    font-size: 11px;
+    color: #888;
+}
+
+.selection-counter {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-top: 10px;
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+/* ============================================================================ */
+/* EXCEL-LIKE DRAG-DOWN FILL STYLES */
+/* ============================================================================ */
+
+/* Drag handle - appears in bottom-right of editable cells */
+.drag-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background: #667eea;
+    border: 1px solid white;
+    cursor: crosshair;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+}
+
+/* Show drag handle on cell hover */
+.editable-field:hover .drag-handle {
+    opacity: 1;
+}
+
+/* Active drag state */
+.drag-fill-active {
+    background-color: #e0e7ff !important;
+    border: 2px solid #667eea !important;
+}
+
+/* Source row being dragged from */
+.drag-fill-source {
+    background-color: #e0e7ff !important;
+}
+
+/* Target rows that will be filled */
+.drag-fill-target {
+    background-color: #e0e7ff !important;
+    transition: background-color 0.1s;
+}
+
+/* Selected row in range */
+.drag-fill-target td {
+    background-color: rgba(102, 126, 234, 0.1);
+}
+
+/* Sort dot - appears in top-right of editable cells */
+.sort-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border: 1px solid white;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+}
+
+/* Show sort dot on cell hover */
+.editable-field:hover .sort-dot {
+    opacity: 1;
+}
+
+/* Sort dot hover effect */
+.sort-dot:hover {
+    transform: scale(1.2);
+    background: #059669;
+}
+
+/* Highlight sorted rows temporarily */
+.sort-highlight {
+    background-color: #d1fae5 !important;
+    transition: background-color 0.3s;
+}
+

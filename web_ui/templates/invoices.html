@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Processing - Delta CFO Agent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_advanced.css') }}?v={{ cache_buster }}">
+    <style>
+        /* Invoice-specific styles */
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .upload-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-box:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .upload-box.dragging {
+            border-color: #3b82f6;
+            background: #dbeafe;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: #475569;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .invoice-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .invoice-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .invoice-filters input,
+        .invoice-filters select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .invoice-table {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        .invoice-table table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        .invoice-table th {
+            background: #f1f5f9;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        /* Column width specifications */
+        .invoice-table th:nth-child(1),
+        .invoice-table td:nth-child(1) {
+            width: 50px;
+            min-width: 50px;
+        }
+
+        .invoice-table th:nth-child(2),
+        .invoice-table td:nth-child(2) {
+            min-width: 120px;
+        }
+
+        .invoice-table th:nth-child(3),
+        .invoice-table td:nth-child(3) {
+            min-width: 100px;
+        }
+
+        .invoice-table th:nth-child(4),
+        .invoice-table td:nth-child(4) {
+            min-width: 100px;
+        }
+
+        .invoice-table th:nth-child(5),
+        .invoice-table td:nth-child(5) {
+            min-width: 150px;
+            max-width: 250px;
+        }
+
+        .invoice-table th:nth-child(6),
+        .invoice-table td:nth-child(6) {
+            min-width: 100px;
+        }
+
+        .invoice-table th:nth-child(7),
+        .invoice-table td:nth-child(7) {
+            min-width: 80px;
+        }
+
+        .invoice-table th:nth-child(8),
+        .invoice-table td:nth-child(8) {
+            min-width: 150px;
+            max-width: 200px;
+        }
+
+        .invoice-table th:nth-child(9),
+        .invoice-table td:nth-child(9) {
+            min-width: 130px;
+            max-width: 180px;
+        }
+
+        .invoice-table th:nth-child(10),
+        .invoice-table td:nth-child(10) {
+            min-width: 200px;
+            width: 200px;
+            white-space: nowrap;
+        }
+
+        .invoice-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .invoice-table tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Vendor name text overflow handling */
+        .invoice-table td:nth-child(5) {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .invoice-table td:nth-child(8),
+        .invoice-table td:nth-child(9) {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: nowrap;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.85rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-view {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #2563eb;
+        }
+
+        .btn-edit {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #059669;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #cbd5e1;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f1f5f9;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            background: white;
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .close-modal {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+            background: none;
+            border: none;
+        }
+
+        .invoice-detail {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 1rem;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .detail-value {
+            color: #1e293b;
+        }
+
+        .line-items {
+            margin-top: 1rem;
+        }
+
+        .line-items table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .line-items th,
+        .line-items td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* Bulk selection styles */
+        .selection-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #3b82f6;
+            color: white;
+            padding: 1rem 2rem;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .selection-toolbar.active {
+            display: flex;
+        }
+
+        .selection-info {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .selection-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .selection-actions button {
+            padding: 0.5rem 1rem;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .selection-actions button:hover {
+            background: white;
+            color: #3b82f6;
+        }
+
+        .selection-actions button.danger:hover {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
+        .invoice-table tr.selected {
+            background: #dbeafe !important;
+        }
+
+        .invoice-table input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .editable-cell {
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s ease;
+        }
+
+        .editable-cell:hover {
+            background: #f8fafc;
+        }
+
+        .editable-cell.editing {
+            background: #eff6ff;
+        }
+
+        .editable-cell input,
+        .editable-cell select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid #3b82f6;
+            border-radius: 4px;
+            font-size: inherit;
+        }
+
+        /* Edit modal styles */
+        .modal-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .modal-footer button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-cancel:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-save {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #2563eb;
+        }
+
+        .btn-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .invoice-table {
+                border-radius: 8px;
+            }
+
+            .invoice-table th,
+            .invoice-table td {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            .action-btn {
+                padding: 0.35rem 0.7rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .invoice-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .upload-section {
+                padding: 1.5rem;
+            }
+
+            .upload-box {
+                padding: 2rem 1rem;
+            }
+
+            .invoice-filters {
+                flex-direction: column;
+            }
+
+            .invoice-filters input,
+            .invoice-filters select {
+                width: 100%;
+            }
+
+            .invoice-table th,
+            .invoice-table td {
+                padding: 0.6rem;
+                font-size: 0.85rem;
+            }
+
+            .action-buttons {
+                gap: 0.4rem;
+            }
+
+            .action-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            .selection-toolbar {
+                flex-wrap: wrap;
+                padding: 1rem;
+            }
+
+            .selection-actions {
+                flex-wrap: wrap;
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .selection-actions button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .invoice-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .invoice-table table {
+                min-width: 900px;
+            }
+
+            .action-buttons {
+                gap: 0.3rem;
+            }
+
+            .action-btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.7rem;
+            }
+
+            /* Ensure actions column remains visible */
+            .invoice-table th:nth-child(10),
+            .invoice-table td:nth-child(10) {
+                position: sticky;
+                right: 0;
+                background: white;
+                box-shadow: -2px 0 4px rgba(0,0,0,0.05);
+            }
+
+            .invoice-table th:nth-child(10) {
+                background: #f1f5f9;
+            }
+
+            .invoice-table tr:hover td:nth-child(10) {
+                background: #f8fafc;
+            }
+        }
+
+        /* Smooth scrollbar styling */
+        .invoice-table::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .invoice-table::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .invoice-table::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .invoice-table::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <h2>Delta CFO Agent</h2>
+                <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Delta's proprietary self improving AI CFO Agent</p>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/dashboard" class="nav-link">Expenses</a>
+                <a href="/revenue" class="nav-link">Revenue Recognition</a>
+                <a href="/cfo-dashboard" class="nav-link">Reports</a>
+                <a href="/invoices" class="nav-link active">Invoices</a>
+                <a href="/files" class="nav-link">File Manager</a>
+            </div>
+        </nav>
+
+        <!-- Statistics -->
+        <div class="invoice-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-invoices">0</div>
+                <div class="stat-label">Total Invoices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-amount">$0</div>
+                <div class="stat-label">Total Amount</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="unique-vendors">0</div>
+                <div class="stat-label">Unique Vendors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="unique-customers">0</div>
+                <div class="stat-label">Unique Customers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avg-amount">$0</div>
+                <div class="stat-label">Average Amount</div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h3 style="margin-bottom: 1rem;">Upload Invoices</h3>
+            <div class="upload-box" id="upload-box">
+                <div class="upload-icon">📤</div>
+                <div class="upload-text">Drag & drop invoice files here or click to browse</div>
+                <div class="upload-hint">Supported formats: PDF, PNG, JPG, JPEG, TIFF, ZIP, 7Z (Max 50MB total)</div>
+                <div class="upload-hint" style="margin-top: 0.5rem; font-weight: 600;">Upload multiple files, a ZIP archive, or a single invoice</div>
+                <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg,.tiff,.zip,.7z" multiple style="display: none;">
+            </div>
+
+            <!-- Batch Progress -->
+            <div id="batch-progress" style="display: none; margin-top: 1rem;">
+                <h4 style="margin-bottom: 0.5rem;">Processing Files...</h4>
+                <div style="background: #f1f5f9; border-radius: 8px; padding: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Progress: <span id="progress-text">0 / 0</span></span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div style="background: #e2e8f0; height: 20px; border-radius: 10px; overflow: hidden;">
+                        <div id="progress-bar" style="background: #3b82f6; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <div id="current-file" style="margin-top: 0.5rem; font-size: 0.9rem; color: #64748b;"></div>
+                </div>
+
+                <!-- Results Summary -->
+                <div id="results-summary" style="display: none; margin-top: 1rem;">
+                    <h4>Processing Complete</h4>
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                        <div style="padding: 0.5rem 1rem; background: #dcfce7; border-radius: 6px; color: #166534;">
+                            <strong id="success-count">0</strong> Successful
+                        </div>
+                        <div style="padding: 0.5rem 1rem; background: #fee2e2; border-radius: 6px; color: #991b1b;">
+                            <strong id="error-count">0</strong> Failed
+                        </div>
+                    </div>
+                    <div id="error-details" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selection Toolbar -->
+        <div class="selection-toolbar" id="selection-toolbar">
+            <div class="selection-info">
+                <span id="selection-count">0</span> invoice(s) selected
+            </div>
+            <div class="selection-actions">
+                <button onclick="openBulkEditModal()">Edit Selected</button>
+                <button class="danger" onclick="deleteSelected()">Delete Selected</button>
+                <button onclick="clearSelection()">Clear Selection</button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="invoice-filters">
+            <select id="filter-business-unit">
+                <option value="">All Business Units</option>
+                <option value="Delta LLC">Delta LLC</option>
+                <option value="Delta Prop Shop LLC">Delta Prop Shop LLC</option>
+                <option value="Delta Mining Paraguay S.A.">Delta Mining Paraguay S.A.</option>
+                <option value="Delta Brazil">Delta Brazil</option>
+                <option value="Personal">Personal</option>
+            </select>
+            <select id="filter-category">
+                <option value="">All Categories</option>
+                <option value="Technology Expenses">Technology Expenses</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Insurance">Insurance</option>
+                <option value="Professional Services">Professional Services</option>
+                <option value="Office Expenses">Office Expenses</option>
+                <option value="Other">Other</option>
+            </select>
+            <input type="text" id="filter-vendor" placeholder="Search vendor...">
+            <input type="text" id="filter-customer" placeholder="Search customer...">
+            <button class="action-btn btn-view" onclick="loadInvoices()">Apply Filters</button>
+        </div>
+
+        <!-- Invoice Table -->
+        <div class="invoice-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">
+                            <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
+                        </th>
+                        <th>Invoice #</th>
+                        <th>Date</th>
+                        <th>Due Date</th>
+                        <th>Vendor (From)</th>
+                        <th>Customer (To)</th>
+                        <th>Amount</th>
+                        <th>Currency</th>
+                        <th>Business Unit</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="invoice-tbody">
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 3rem;">Loading invoices...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <div>Processing invoice...</div>
+        </div>
+    </div>
+
+    <!-- Invoice Detail Modal -->
+    <div class="modal" id="invoice-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Invoice Details</div>
+                <button class="close-modal" onclick="closeModal('invoice-modal')">&times;</button>
+            </div>
+            <div class="invoice-detail" id="invoice-detail">
+                <!-- Invoice details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Invoice Modal -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="edit-modal-title">Edit Invoice</div>
+                <button class="close-modal" onclick="closeModal('edit-modal')">&times;</button>
+            </div>
+            <form class="modal-form" id="edit-form">
+                <h4 style="margin-bottom: 0.5rem; color: #475569;">Basic Information</h4>
+                <div class="form-group">
+                    <label for="edit-invoice-number">Invoice Number *</label>
+                    <input type="text" id="edit-invoice-number" name="invoice_number" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-date">Invoice Date *</label>
+                    <input type="date" id="edit-date" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-due-date">Due Date</label>
+                    <input type="date" id="edit-due-date" name="due_date">
+                </div>
+
+                <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: #475569;">Vendor (From)</h4>
+                <div class="form-group">
+                    <label for="edit-vendor">Vendor Name *</label>
+                    <input type="text" id="edit-vendor" name="vendor_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-vendor-address">Vendor Address</label>
+                    <input type="text" id="edit-vendor-address" name="vendor_address">
+                </div>
+                <div class="form-group">
+                    <label for="edit-vendor-tax-id">Vendor Tax ID</label>
+                    <input type="text" id="edit-vendor-tax-id" name="vendor_tax_id">
+                </div>
+
+                <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: #475569;">Customer (To)</h4>
+                <div class="form-group">
+                    <label for="edit-customer">Customer Name</label>
+                    <input type="text" id="edit-customer" name="customer_name">
+                </div>
+                <div class="form-group">
+                    <label for="edit-customer-address">Customer Address</label>
+                    <input type="text" id="edit-customer-address" name="customer_address">
+                </div>
+                <div class="form-group">
+                    <label for="edit-customer-tax-id">Customer Tax ID</label>
+                    <input type="text" id="edit-customer-tax-id" name="customer_tax_id">
+                </div>
+
+                <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: #475569;">Financial Details</h4>
+                <div class="form-group">
+                    <label for="edit-amount">Total Amount *</label>
+                    <input type="number" id="edit-amount" name="total_amount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-currency">Currency</label>
+                    <select id="edit-currency" name="currency">
+                        <option value="USD">USD</option>
+                        <option value="BRL">BRL</option>
+                        <option value="PYG">PYG</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-business-unit">Business Unit</label>
+                    <select id="edit-business-unit" name="business_unit">
+                        <option value="">Select...</option>
+                        <option value="Delta LLC">Delta LLC</option>
+                        <option value="Delta Prop Shop LLC">Delta Prop Shop LLC</option>
+                        <option value="Delta Mining Paraguay S.A.">Delta Mining Paraguay S.A.</option>
+                        <option value="Delta Brazil">Delta Brazil</option>
+                        <option value="Personal">Personal</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-category">Category</label>
+                    <select id="edit-category" name="category">
+                        <option value="">Select...</option>
+                        <option value="Technology Expenses">Technology Expenses</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Insurance">Insurance</option>
+                        <option value="Professional Services">Professional Services</option>
+                        <option value="Office Expenses">Office Expenses</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('edit-modal')">Cancel</button>
+                    <button type="submit" class="btn-save" id="save-edit-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let selectedInvoices = new Set();
+        let currentEditingInvoiceId = null;
+        let allInvoices = [];
+
+        // Restore active background jobs on page load
+        async function restoreActiveJobs() {
+            // Check localStorage for active job
+            const activeJobId = localStorage.getItem('activeBatchJobId');
+            if (!activeJobId) return;
+
+            try {
+                // Check if job is still active
+                const response = await fetch(`/api/jobs/${activeJobId}`);
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    const job = result.data;
+
+                    // Only restore if job is still running
+                    if (job.status === 'running' || job.status === 'pending') {
+                        console.log('Restoring active batch job:', activeJobId);
+
+                        // Restore UI state
+                        const batchProgress = document.getElementById('batch-progress');
+                        const resultsSummary = document.getElementById('results-summary');
+                        batchProgress.style.display = 'block';
+                        resultsSummary.style.display = 'none';
+
+                        // Set current job
+                        currentBatchJob = activeJobId;
+
+                        // Add cancel button
+                        const progressText = document.getElementById('progress-text');
+                        const progressContainer = progressText.parentElement;
+                        if (!progressContainer.querySelector('.cancel-job-btn')) {
+                            const cancelBtn = document.createElement('button');
+                            cancelBtn.innerHTML = '❌ Cancel Job';
+                            cancelBtn.className = 'btn btn-sm btn-outline-danger ms-2 cancel-job-btn';
+                            cancelBtn.onclick = cancelCurrentJob;
+                            progressContainer.appendChild(cancelBtn);
+                        }
+
+                        // Resume polling
+                        pollJobProgress(activeJobId);
+                    } else {
+                        // Job is completed/failed, clean up
+                        localStorage.removeItem('activeBatchJobId');
+                        if (job.status === 'completed') {
+                            // Show completion notification
+                            showJobCompletionNotification(job);
+                        }
+                    }
+                } else {
+                    // Job not found, clean up
+                    localStorage.removeItem('activeBatchJobId');
+                }
+            } catch (error) {
+                console.error('Error restoring active job:', error);
+                localStorage.removeItem('activeBatchJobId');
+            }
+        }
+
+        // Show job completion notification
+        function showJobCompletionNotification(job) {
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-success alert-dismissible fade show';
+            notification.innerHTML = `
+                <strong>Background Job Completed!</strong>
+                Processed ${job.processed_items || 0} files (${job.successful_items || 0} successful, ${job.failed_items || 0} failed)
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '9999';
+            notification.style.minWidth = '300px';
+
+            document.body.appendChild(notification);
+
+            // Auto-remove after 8 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 8000);
+
+            // Refresh data
+            loadStats();
+            loadInvoices();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadInvoices();
+            setupUpload();
+            setupEditModal();
+            restoreActiveJobs(); // Restore any running background jobs
+        });
+
+        // Setup file upload
+        function setupUpload() {
+            const uploadBox = document.getElementById('upload-box');
+            const fileInput = document.getElementById('file-input');
+
+            uploadBox.addEventListener('click', () => fileInput.click());
+
+            uploadBox.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadBox.classList.add('dragging');
+            });
+
+            uploadBox.addEventListener('dragleave', () => {
+                uploadBox.classList.remove('dragging');
+            });
+
+            uploadBox.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadBox.classList.remove('dragging');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileUpload(files);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files);
+                }
+            });
+        }
+
+        // Handle file upload
+        async function handleFileUpload(files) {
+            // Convert FileList to Array
+            const fileArray = Array.from(files);
+
+            // Check if it's a single file or batch
+            const isSingleFile = fileArray.length === 1;
+            const isCompressedFile = isSingleFile && ['.zip', '.7z'].includes(
+                fileArray[0].name.toLowerCase().slice(fileArray[0].name.lastIndexOf('.'))
+            );
+
+            if (isSingleFile && !isCompressedFile) {
+                // Single file upload - use simple endpoint
+                await handleSingleFileUpload(fileArray[0]);
+            } else {
+                // Batch upload - use batch endpoint with progress tracking
+                await handleBatchFileUpload(fileArray);
+            }
+        }
+
+        // Handle single file upload
+        async function handleSingleFileUpload(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.add('active');
+
+            try {
+                const response = await fetch('/api/invoices/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('Invoice processed successfully!');
+                    loadStats();
+                    loadInvoices();
+                } else {
+                    alert('Error: ' + (result.error || 'Upload failed'));
+                }
+            } catch (error) {
+                alert('Upload error: ' + error.message);
+            } finally {
+                loadingOverlay.classList.remove('active');
+            }
+        }
+
+        // Global variable to store current job for cancellation
+        let currentBatchJob = null;
+
+        // Handle batch file upload with progress tracking (async with background jobs)
+        async function handleBatchFileUpload(files) {
+            const formData = new FormData();
+
+            // Check if it's a compressed file
+            const isCompressed = files.length === 1 && ['.zip', '.7z'].includes(
+                files[0].name.toLowerCase().slice(files[0].name.lastIndexOf('.'))
+            );
+
+            if (isCompressed) {
+                formData.append('file', files[0]);
+            } else {
+                // Multiple files
+                files.forEach(file => {
+                    formData.append('files', file);
+                });
+            }
+
+            // Show progress UI
+            const batchProgress = document.getElementById('batch-progress');
+            const resultsSummary = document.getElementById('results-summary');
+            batchProgress.style.display = 'block';
+            resultsSummary.style.display = 'none';
+
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const progressPercent = document.getElementById('progress-percent');
+            const currentFile = document.getElementById('current-file');
+
+            // Initialize progress
+            progressBar.style.width = '0%';
+            progressText.textContent = `0 / ${files.length}`;
+            progressPercent.textContent = '0%';
+            currentFile.textContent = isCompressed ? `Uploading ${files[0].name}...` : 'Starting upload...';
+
+            // Add cancel button
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerHTML = '❌ Cancel Job';
+            cancelBtn.className = 'btn btn-sm btn-outline-danger ms-2';
+            cancelBtn.style.display = 'inline-block';
+            cancelBtn.onclick = cancelCurrentJob;
+
+            // Insert cancel button after progress text
+            const progressContainer = progressText.parentElement;
+            if (!progressContainer.querySelector('.cancel-job-btn')) {
+                cancelBtn.classList.add('cancel-job-btn');
+                progressContainer.appendChild(cancelBtn);
+            }
+
+            try {
+                // Start async upload job
+                const response = await fetch('/api/invoices/upload-batch-async', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    currentBatchJob = result.job_id;
+                    currentFile.textContent = 'Job started - processing files in background...';
+
+                    // Store job ID for persistence across page refreshes
+                    localStorage.setItem('activeBatchJobId', result.job_id);
+
+                    // Start polling for progress
+                    pollJobProgress(result.job_id);
+                } else {
+                    alert('Failed to start batch job: ' + (result.error || 'Unknown error'));
+                    batchProgress.style.display = 'none';
+                }
+            } catch (error) {
+                alert('Upload error: ' + error.message);
+                batchProgress.style.display = 'none';
+                // Remove cancel button on error
+                const cancelButton = document.querySelector('.cancel-job-btn');
+                if (cancelButton) cancelButton.remove();
+            }
+        }
+
+        // Poll job progress every 2 seconds
+        async function pollJobProgress(jobId) {
+            const batchProgress = document.getElementById('batch-progress');
+            const resultsSummary = document.getElementById('results-summary');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const progressPercent = document.getElementById('progress-percent');
+            const currentFile = document.getElementById('current-file');
+
+            const pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/jobs/${jobId}`);
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        const data = result.data;
+
+                        // Update progress display
+                        const progress = data.progress_percentage || 0;
+                        progressBar.style.width = `${progress}%`;
+                        progressPercent.textContent = `${Math.round(progress)}%`;
+                        progressText.textContent = `${data.processed_items || 0} / ${data.total_items || 0}`;
+
+                        // Update status text
+                        if (data.status === 'running') {
+                            currentFile.textContent = `Processing... (${data.successful_items || 0} success, ${data.failed_items || 0} failed)`;
+                        } else if (data.status === 'completed') {
+                            currentFile.textContent = 'Processing complete!';
+                            progressBar.style.width = '100%';
+                            progressPercent.textContent = '100%';
+
+                            // Clear polling and cleanup
+                            clearInterval(pollInterval);
+                            currentBatchJob = null;
+                            localStorage.removeItem('activeBatchJobId');
+
+                            // Remove cancel button
+                            const cancelButton = document.querySelector('.cancel-job-btn');
+                            if (cancelButton) cancelButton.remove();
+
+                            // Fetch detailed results for error display
+                            await showJobResults(jobId);
+
+                            // Refresh stats and invoice list
+                            loadStats();
+                            loadInvoices();
+
+                        } else if (data.status === 'completed_with_errors') {
+                            currentFile.textContent = `Processing completed with errors! (${data.successful_items || 0} success, ${data.failed_items || 0} failed)`;
+                            progressBar.style.width = '100%';
+                            progressPercent.textContent = '100%';
+
+                            // Clear polling and cleanup
+                            clearInterval(pollInterval);
+                            currentBatchJob = null;
+                            localStorage.removeItem('activeBatchJobId');
+
+                            // Remove cancel button
+                            const cancelButton = document.querySelector('.cancel-job-btn');
+                            if (cancelButton) cancelButton.remove();
+
+                            // Fetch detailed results for error display
+                            await showJobResults(jobId);
+
+                            // Refresh stats and invoice list
+                            loadStats();
+                            loadInvoices();
+
+                            // Show error notification with details
+                            showToast(`Upload completed with ${data.failed_items || 0} errors out of ${data.total_items || 0} files. Check details below.`, 'warning', 8000);
+
+                        } else if (data.status === 'failed') {
+                            currentFile.textContent = 'Job failed: ' + (data.error_message || 'Unknown error');
+                            clearInterval(pollInterval);
+                            currentBatchJob = null;
+                            localStorage.removeItem('activeBatchJobId');
+
+                            // Remove cancel button
+                            const cancelButton = document.querySelector('.cancel-job-btn');
+                            if (cancelButton) cancelButton.remove();
+
+                            // Still try to show partial results
+                            await showJobResults(jobId);
+                        } else if (data.status === 'cancelled') {
+                            currentFile.textContent = 'Job cancelled by user';
+                            clearInterval(pollInterval);
+                            currentBatchJob = null;
+                            localStorage.removeItem('activeBatchJobId');
+
+                            // Remove cancel button
+                            const cancelButton = document.querySelector('.cancel-job-btn');
+                            if (cancelButton) cancelButton.remove();
+
+                            batchProgress.style.display = 'none';
+                        }
+                    } else {
+                        console.error('Failed to fetch job status:', job.error);
+                        // Continue polling - might be temporary error
+                    }
+                } catch (error) {
+                    console.error('Error polling job status:', error);
+                    // Continue polling - might be temporary network error
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+
+        // Show detailed job results
+        async function showJobResults(jobId) {
+            try {
+                const response = await fetch(`/api/jobs/${jobId}`);
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    const data = result.data;
+
+                    // Show summary
+                    const resultsSummary = document.getElementById('results-summary');
+                    resultsSummary.style.display = 'block';
+                    document.getElementById('success-count').textContent = data.successful_items || 0;
+                    document.getElementById('error-count').textContent = data.failed_items || 0;
+
+                    // Show error details if any
+                    const errorDetails = document.getElementById('error-details');
+                    const failedItems = data.items ? data.items.filter(item => item.status === 'failed') : [];
+                    if (failedItems.length > 0) {
+                        errorDetails.innerHTML = '<h5 style="margin-top: 1rem;">Failed Files:</h5>';
+                        failedItems.forEach(item => {
+                            const filename = item.item_name || 'Unknown file';
+                            const error = item.error_message || 'Unknown error';
+                            // Truncate long error messages
+                            const truncatedError = error.length > 100 ? error.substring(0, 100) + '...' : error;
+                            errorDetails.innerHTML += `
+                                <div style="padding: 0.5rem; background: #fee2e2; border-radius: 4px; margin: 0.25rem 0; font-size: 0.9rem;">
+                                    <strong>${filename}:</strong> ${truncatedError}
+                                </div>
+                            `;
+                        });
+                    } else {
+                        errorDetails.innerHTML = '';
+                    }
+
+                    // Auto-hide progress after 5 seconds if no failures
+                    if ((data.failed_items || 0) === 0) {
+                        setTimeout(() => {
+                            document.getElementById('batch-progress').style.display = 'none';
+                        }, 5000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching job results:', error);
+            }
+        }
+
+        // Cancel current background job
+        async function cancelCurrentJob() {
+            if (!currentBatchJob) return;
+
+            try {
+                const response = await fetch(`/api/jobs/${currentBatchJob}/cancel`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    console.log('Job cancelled successfully');
+                } else {
+                    console.error('Failed to cancel job:', result.error);
+                }
+            } catch (error) {
+                console.error('Error cancelling job:', error);
+            }
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/invoices/stats');
+                const stats = await response.json();
+
+                document.getElementById('total-invoices').textContent = stats.total_invoices || 0;
+                document.getElementById('total-amount').textContent = '$' + (stats.total_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                // Calculate unique vendors and customers
+                const uniqueVendors = stats.unique_vendors || 0;
+                document.getElementById('unique-vendors').textContent = uniqueVendors;
+
+                const uniqueCustomers = stats.unique_customers || 0;
+                document.getElementById('unique-customers').textContent = uniqueCustomers;
+
+                // Calculate average amount
+                const avgAmount = stats.total_invoices > 0 ? stats.total_amount / stats.total_invoices : 0;
+                document.getElementById('avg-amount').textContent = '$' + avgAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load invoices
+        async function loadInvoices(page = 1) {
+            currentPage = page;
+
+            const filters = {
+                business_unit: document.getElementById('filter-business-unit').value,
+                category: document.getElementById('filter-category').value,
+                vendor_name: document.getElementById('filter-vendor').value,
+                customer_name: document.getElementById('filter-customer').value
+            };
+
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page);
+            queryParams.append('per_page', 20);
+
+            Object.keys(filters).forEach(key => {
+                if (filters[key]) {
+                    queryParams.append(key, filters[key]);
+                }
+            });
+
+            try {
+                const response = await fetch('/api/invoices?' + queryParams);
+                const data = await response.json();
+
+                const tbody = document.getElementById('invoice-tbody');
+                tbody.innerHTML = '';
+                allInvoices = data.invoices || [];
+
+                if (data.invoices && data.invoices.length > 0) {
+                    data.invoices.forEach(invoice => {
+                        const isSelected = selectedInvoices.has(invoice.id);
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-invoice-id', invoice.id);
+                        if (isSelected) row.classList.add('selected');
+
+                        row.innerHTML = `
+                            <td onclick="event.stopPropagation()">
+                                <input type="checkbox" class="invoice-checkbox" data-invoice-id="${invoice.id}"
+                                    onchange="toggleSelectInvoice('${invoice.id}')" ${isSelected ? 'checked' : ''}>
+                            </td>
+                            <td class="editable-cell" data-field="invoice_number" data-invoice-id="${invoice.id}">${invoice.invoice_number || 'N/A'}</td>
+                            <td class="editable-cell" data-field="date" data-invoice-id="${invoice.id}">${invoice.date || 'N/A'}</td>
+                            <td class="editable-cell" data-field="due_date" data-invoice-id="${invoice.id}">${invoice.due_date || 'N/A'}</td>
+                            <td class="editable-cell" data-field="vendor_name" data-invoice-id="${invoice.id}">${invoice.vendor_name || 'N/A'}</td>
+                            <td class="editable-cell" data-field="customer_name" data-invoice-id="${invoice.id}">${invoice.customer_name || 'N/A'}</td>
+                            <td class="editable-cell" data-field="total_amount" data-invoice-id="${invoice.id}">${invoice.total_amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td class="editable-cell" data-field="currency" data-invoice-id="${invoice.id}">${invoice.currency || 'USD'}</td>
+                            <td class="editable-cell" data-field="business_unit" data-invoice-id="${invoice.id}">${invoice.business_unit || 'N/A'}</td>
+                            <td class="editable-cell" data-field="category" data-invoice-id="${invoice.id}">${invoice.category || 'N/A'}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-view" onclick="viewInvoice('${invoice.id}')">View</button>
+                                    <button class="action-btn btn-edit" onclick="openEditModal('${invoice.id}')">Edit</button>
+                                    <button class="action-btn btn-delete" onclick="deleteInvoice('${invoice.id}')">Delete</button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    // Setup inline editing
+                    setupInlineEditing();
+
+                    // Update pagination
+                    totalPages = data.pagination.pages;
+                    renderPagination();
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 3rem;">No invoices found</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading invoices:', error);
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 3rem; color: red;">Error loading invoices</td></tr>';
+            }
+        }
+
+        // Render pagination
+        function renderPagination() {
+            const paginationDiv = document.getElementById('pagination');
+            paginationDiv.innerHTML = '';
+
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => loadInvoices(currentPage - 1);
+            paginationDiv.appendChild(prevBtn);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.textContent = i;
+                    pageBtn.className = i === currentPage ? 'active' : '';
+                    pageBtn.onclick = () => loadInvoices(i);
+                    paginationDiv.appendChild(pageBtn);
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    const ellipsis = document.createElement('button');
+                    ellipsis.textContent = '...';
+                    ellipsis.disabled = true;
+                    paginationDiv.appendChild(ellipsis);
+                }
+            }
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => loadInvoices(currentPage + 1);
+            paginationDiv.appendChild(nextBtn);
+        }
+
+        // View invoice details
+        async function viewInvoice(invoiceId) {
+            try {
+                const response = await fetch(`/api/invoices/${invoiceId}`);
+                const invoice = await response.json();
+
+                const detailDiv = document.getElementById('invoice-detail');
+                detailDiv.innerHTML = `
+                    <div class="detail-row">
+                        <div class="detail-label">Invoice Number:</div>
+                        <div class="detail-value">${invoice.invoice_number || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Date:</div>
+                        <div class="detail-value">${invoice.date || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Due Date:</div>
+                        <div class="detail-value">${invoice.due_date || 'N/A'}</div>
+                    </div>
+
+                    <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: #475569;">From (Vendor/Supplier)</h4>
+                    <div class="detail-row">
+                        <div class="detail-label">Vendor Name:</div>
+                        <div class="detail-value">${invoice.vendor_name || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Vendor Address:</div>
+                        <div class="detail-value">${invoice.vendor_address || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Vendor Tax ID:</div>
+                        <div class="detail-value">${invoice.vendor_tax_id || 'N/A'}</div>
+                    </div>
+
+                    <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: #475569;">To (Customer/Client)</h4>
+                    <div class="detail-row">
+                        <div class="detail-label">Customer Name:</div>
+                        <div class="detail-value">${invoice.customer_name || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Customer Address:</div>
+                        <div class="detail-value">${invoice.customer_address || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Customer Tax ID:</div>
+                        <div class="detail-value">${invoice.customer_tax_id || 'N/A'}</div>
+                    </div>
+
+                    <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: #475569;">Invoice Details</h4>
+                    <div class="detail-row">
+                        <div class="detail-label">Total Amount:</div>
+                        <div class="detail-value">${invoice.currency} ${invoice.total_amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Business Unit:</div>
+                        <div class="detail-value">${invoice.business_unit || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Category:</div>
+                        <div class="detail-value">${invoice.category || 'N/A'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Status:</div>
+                        <div class="detail-value"><span class="status-badge status-${invoice.status}">${invoice.status}</span></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Confidence:</div>
+                        <div class="detail-value">${(invoice.confidence_score * 100).toFixed(1)}%</div>
+                    </div>
+                    ${invoice.processing_notes ? `
+                    <div class="detail-row">
+                        <div class="detail-label">Notes:</div>
+                        <div class="detail-value">${invoice.processing_notes}</div>
+                    </div>
+                    ` : ''}
+                `;
+
+                // Add line items if available
+                if (invoice.line_items && invoice.line_items.length > 0) {
+                    const lineItemsHtml = `
+                        <div class="line-items">
+                            <h4>Line Items</h4>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${invoice.line_items.map(item => `
+                                        <tr>
+                                            <td>${item.description}</td>
+                                            <td>${item.quantity}</td>
+                                            <td>${item.unit_price}</td>
+                                            <td>${item.total}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    detailDiv.innerHTML += lineItemsHtml;
+                }
+
+                document.getElementById('invoice-modal').classList.add('active');
+            } catch (error) {
+                alert('Error loading invoice details: ' + error.message);
+            }
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            if (modalId === 'edit-modal') {
+                document.getElementById('edit-form').reset();
+                currentEditingInvoiceId = null;
+            }
+        }
+
+        // ====================
+        // BULK SELECTION
+        // ====================
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const checkboxes = document.querySelectorAll('.invoice-checkbox');
+
+            checkboxes.forEach(checkbox => {
+                const invoiceId = checkbox.getAttribute('data-invoice-id');
+                if (selectAllCheckbox.checked) {
+                    selectedInvoices.add(invoiceId);
+                    checkbox.checked = true;
+                    const row = checkbox.closest('tr');
+                    if (row) row.classList.add('selected');
+                } else {
+                    selectedInvoices.delete(invoiceId);
+                    checkbox.checked = false;
+                    const row = checkbox.closest('tr');
+                    if (row) row.classList.remove('selected');
+                }
+            });
+
+            updateSelectionUI();
+        }
+
+        function toggleSelectInvoice(invoiceId) {
+            const checkbox = document.querySelector(`.invoice-checkbox[data-invoice-id="${invoiceId}"]`);
+            const row = checkbox.closest('tr');
+
+            if (checkbox.checked) {
+                selectedInvoices.add(invoiceId);
+                if (row) row.classList.add('selected');
+            } else {
+                selectedInvoices.delete(invoiceId);
+                if (row) row.classList.remove('selected');
+            }
+
+            // Update select-all checkbox
+            const totalCheckboxes = document.querySelectorAll('.invoice-checkbox').length;
+            const selectAllCheckbox = document.getElementById('select-all');
+            selectAllCheckbox.checked = selectedInvoices.size === totalCheckboxes && totalCheckboxes > 0;
+
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const toolbar = document.getElementById('selection-toolbar');
+            const count = document.getElementById('selection-count');
+
+            count.textContent = selectedInvoices.size;
+
+            if (selectedInvoices.size > 0) {
+                toolbar.classList.add('active');
+            } else {
+                toolbar.classList.remove('active');
+            }
+        }
+
+        function clearSelection() {
+            selectedInvoices.clear();
+            document.querySelectorAll('.invoice-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+                const row = checkbox.closest('tr');
+                if (row) row.classList.remove('selected');
+            });
+            document.getElementById('select-all').checked = false;
+            updateSelectionUI();
+        }
+
+        // ====================
+        // INLINE EDITING
+        // ====================
+
+        function setupInlineEditing() {
+            document.querySelectorAll('.editable-cell').forEach(cell => {
+                cell.addEventListener('click', function() {
+                    if (!this.classList.contains('editing')) {
+                        startInlineEdit(this);
+                    }
+                });
+            });
+        }
+
+        function startInlineEdit(cell) {
+            const currentValue = cell.textContent.trim();
+            const field = cell.getAttribute('data-field');
+            const invoiceId = cell.getAttribute('data-invoice-id');
+
+            cell.classList.add('editing');
+            const originalValue = currentValue;
+
+            // Create appropriate input based on field type
+            if (field === 'date' || field === 'due_date') {
+                cell.innerHTML = `<input type="date" class="inline-edit-input" value="${currentValue !== 'N/A' ? currentValue : ''}">`;
+            } else if (field === 'total_amount') {
+                const numValue = currentValue.replace(/,/g, '');
+                cell.innerHTML = `<input type="number" class="inline-edit-input" value="${numValue}" step="0.01">`;
+            } else if (field === 'currency') {
+                cell.innerHTML = `
+                    <select class="inline-edit-input">
+                        <option value="USD" ${currentValue === 'USD' ? 'selected' : ''}>USD</option>
+                        <option value="BRL" ${currentValue === 'BRL' ? 'selected' : ''}>BRL</option>
+                        <option value="PYG" ${currentValue === 'PYG' ? 'selected' : ''}>PYG</option>
+                        <option value="EUR" ${currentValue === 'EUR' ? 'selected' : ''}>EUR</option>
+                    </select>
+                `;
+            } else if (field === 'business_unit') {
+                cell.innerHTML = `
+                    <select class="inline-edit-input">
+                        <option value="">Select...</option>
+                        <option value="Delta LLC" ${currentValue === 'Delta LLC' ? 'selected' : ''}>Delta LLC</option>
+                        <option value="Delta Prop Shop LLC" ${currentValue === 'Delta Prop Shop LLC' ? 'selected' : ''}>Delta Prop Shop LLC</option>
+                        <option value="Delta Mining Paraguay S.A." ${currentValue === 'Delta Mining Paraguay S.A.' ? 'selected' : ''}>Delta Mining Paraguay S.A.</option>
+                        <option value="Delta Brazil" ${currentValue === 'Delta Brazil' ? 'selected' : ''}>Delta Brazil</option>
+                        <option value="Personal" ${currentValue === 'Personal' ? 'selected' : ''}>Personal</option>
+                    </select>
+                `;
+            } else if (field === 'category') {
+                cell.innerHTML = `
+                    <select class="inline-edit-input">
+                        <option value="">Select...</option>
+                        <option value="Technology Expenses" ${currentValue === 'Technology Expenses' ? 'selected' : ''}>Technology Expenses</option>
+                        <option value="Utilities" ${currentValue === 'Utilities' ? 'selected' : ''}>Utilities</option>
+                        <option value="Insurance" ${currentValue === 'Insurance' ? 'selected' : ''}>Insurance</option>
+                        <option value="Professional Services" ${currentValue === 'Professional Services' ? 'selected' : ''}>Professional Services</option>
+                        <option value="Office Expenses" ${currentValue === 'Office Expenses' ? 'selected' : ''}>Office Expenses</option>
+                        <option value="Other" ${currentValue === 'Other' ? 'selected' : ''}>Other</option>
+                    </select>
+                `;
+            } else {
+                cell.innerHTML = `<input type="text" class="inline-edit-input" value="${currentValue !== 'N/A' ? currentValue : ''}">`;
+            }
+
+            const input = cell.querySelector('.inline-edit-input');
+            input.focus();
+            if (input.select) input.select();
+
+            const saveEdit = async () => {
+                const newValue = input.value.trim();
+                await saveInlineEdit(invoiceId, field, newValue, cell, originalValue);
+            };
+
+            const cancelEdit = () => {
+                cell.classList.remove('editing');
+                cell.textContent = originalValue;
+            };
+
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveEdit();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                }
+            });
+        }
+
+        async function saveInlineEdit(invoiceId, field, value, cellElement, originalValue) {
+            try {
+                const response = await fetch(`/api/invoices/${invoiceId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ field, value })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    cellElement.classList.remove('editing');
+                    // Format the display value
+                    if (field === 'total_amount' && value) {
+                        cellElement.textContent = parseFloat(value).toLocaleString(undefined, {minimumFractionDigits: 2});
+                    } else {
+                        cellElement.textContent = value || 'N/A';
+                    }
+                    showToast('Invoice updated successfully', 'success');
+                } else {
+                    throw new Error(result.error || 'Update failed');
+                }
+            } catch (error) {
+                console.error('Error updating invoice:', error);
+                cellElement.classList.remove('editing');
+                cellElement.textContent = originalValue;
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        // ====================
+        // MODAL EDITING
+        // ====================
+
+        function setupEditModal() {
+            const form = document.getElementById('edit-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await saveModalEdit();
+            });
+        }
+
+        function openEditModal(invoiceId) {
+            // Find invoice data
+            const invoice = allInvoices.find(inv => inv.id === invoiceId);
+            if (!invoice) {
+                alert('Invoice not found');
+                return;
+            }
+
+            currentEditingInvoiceId = invoiceId;
+            document.getElementById('edit-modal-title').textContent = `Edit Invoice: ${invoice.invoice_number}`;
+
+            // Populate form
+            document.getElementById('edit-invoice-number').value = invoice.invoice_number || '';
+            document.getElementById('edit-date').value = invoice.date || '';
+            document.getElementById('edit-due-date').value = invoice.due_date || '';
+            document.getElementById('edit-vendor').value = invoice.vendor_name || '';
+            document.getElementById('edit-vendor-address').value = invoice.vendor_address || '';
+            document.getElementById('edit-vendor-tax-id').value = invoice.vendor_tax_id || '';
+            document.getElementById('edit-customer').value = invoice.customer_name || '';
+            document.getElementById('edit-customer-address').value = invoice.customer_address || '';
+            document.getElementById('edit-customer-tax-id').value = invoice.customer_tax_id || '';
+            document.getElementById('edit-amount').value = invoice.total_amount || '';
+            document.getElementById('edit-currency').value = invoice.currency || 'USD';
+            document.getElementById('edit-business-unit').value = invoice.business_unit || '';
+            document.getElementById('edit-category').value = invoice.category || '';
+
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        function openBulkEditModal() {
+            if (selectedInvoices.size === 0) {
+                alert('Please select invoices to edit');
+                return;
+            }
+
+            currentEditingInvoiceId = null;
+            document.getElementById('edit-modal-title').textContent = `Bulk Edit ${selectedInvoices.size} Invoices`;
+
+            // Clear form for bulk edit (only show fields that can be bulk edited)
+            document.getElementById('edit-invoice-number').value = '';
+            document.getElementById('edit-date').value = '';
+            document.getElementById('edit-due-date').value = '';
+            document.getElementById('edit-vendor').value = '';
+            document.getElementById('edit-vendor-address').value = '';
+            document.getElementById('edit-vendor-tax-id').value = '';
+            document.getElementById('edit-customer').value = '';
+            document.getElementById('edit-customer-address').value = '';
+            document.getElementById('edit-customer-tax-id').value = '';
+            document.getElementById('edit-amount').value = '';
+
+            // Disable fields that shouldn't be bulk edited
+            document.getElementById('edit-invoice-number').disabled = true;
+            document.getElementById('edit-date').disabled = true;
+            document.getElementById('edit-vendor').disabled = true;
+            document.getElementById('edit-vendor-address').disabled = true;
+            document.getElementById('edit-vendor-tax-id').disabled = true;
+            document.getElementById('edit-amount').disabled = true;
+
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        async function saveModalEdit() {
+            const saveBtn = document.getElementById('save-edit-btn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            try {
+                if (currentEditingInvoiceId) {
+                    // Single invoice edit
+                    await saveSingleInvoiceEdit();
+                } else {
+                    // Bulk edit
+                    await saveBulkInvoiceEdit();
+                }
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Changes';
+                // Re-enable fields for next use
+                document.getElementById('edit-invoice-number').disabled = false;
+                document.getElementById('edit-date').disabled = false;
+                document.getElementById('edit-vendor').disabled = false;
+                document.getElementById('edit-vendor-address').disabled = false;
+                document.getElementById('edit-vendor-tax-id').disabled = false;
+                document.getElementById('edit-amount').disabled = false;
+            }
+        }
+
+        async function saveSingleInvoiceEdit() {
+            const formData = {
+                invoice_number: document.getElementById('edit-invoice-number').value,
+                date: document.getElementById('edit-date').value,
+                due_date: document.getElementById('edit-due-date').value,
+                vendor_name: document.getElementById('edit-vendor').value,
+                vendor_address: document.getElementById('edit-vendor-address').value,
+                vendor_tax_id: document.getElementById('edit-vendor-tax-id').value,
+                customer_name: document.getElementById('edit-customer').value,
+                customer_address: document.getElementById('edit-customer-address').value,
+                customer_tax_id: document.getElementById('edit-customer-tax-id').value,
+                total_amount: document.getElementById('edit-amount').value,
+                currency: document.getElementById('edit-currency').value,
+                business_unit: document.getElementById('edit-business-unit').value,
+                category: document.getElementById('edit-category').value
+            };
+
+            const response = await fetch(`/api/invoices/${currentEditingInvoiceId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                showToast('Invoice updated successfully', 'success');
+                closeModal('edit-modal');
+                loadInvoices(currentPage);
+                loadStats();
+            } else {
+                throw new Error(result.error || 'Update failed');
+            }
+        }
+
+        async function saveBulkInvoiceEdit() {
+            const updates = {
+                currency: document.getElementById('edit-currency').value,
+                business_unit: document.getElementById('edit-business-unit').value,
+                category: document.getElementById('edit-category').value,
+                due_date: document.getElementById('edit-due-date').value,
+                customer_name: document.getElementById('edit-customer').value,
+                customer_address: document.getElementById('edit-customer-address').value,
+                customer_tax_id: document.getElementById('edit-customer-tax-id').value
+            };
+
+            // Remove empty values
+            Object.keys(updates).forEach(key => {
+                if (!updates[key]) delete updates[key];
+            });
+
+            if (Object.keys(updates).length === 0) {
+                alert('Please fill in at least one field to update');
+                return;
+            }
+
+            const response = await fetch('/api/invoices/bulk-update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    invoice_ids: Array.from(selectedInvoices),
+                    updates: updates
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                showToast(`Updated ${result.updated_count} invoices`, 'success');
+                closeModal('edit-modal');
+                clearSelection();
+                loadInvoices(currentPage);
+                loadStats();
+            } else {
+                throw new Error(result.error || 'Bulk update failed');
+            }
+        }
+
+        // ====================
+        // BULK DELETE
+        // ====================
+
+        async function deleteSelected() {
+            if (selectedInvoices.size === 0) {
+                alert('Please select invoices to delete');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete ${selectedInvoices.size} invoice(s)? This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/invoices/bulk-delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        invoice_ids: Array.from(selectedInvoices)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showToast(`Deleted ${result.deleted_count} invoices`, 'success');
+                    clearSelection();
+                    loadInvoices(currentPage);
+                    loadStats();
+                } else {
+                    throw new Error(result.error || 'Bulk delete failed');
+                }
+            } catch (error) {
+                alert('Error deleting invoices: ' + error.message);
+            }
+        }
+
+        // ====================
+        // UTILITIES
+        // ====================
+
+        function showToast(message, type = 'info') {
+            // Simple toast notification
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Delete invoice
+        async function deleteInvoice(invoiceId) {
+            if (!confirm('Are you sure you want to delete this invoice?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/invoices/${invoiceId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Invoice deleted successfully');
+                    loadStats();
+                    loadInvoices(currentPage);
+                } else {
+                    alert('Error: ' + (result.error || 'Delete failed'));
+                }
+            } catch (error) {
+                alert('Delete error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

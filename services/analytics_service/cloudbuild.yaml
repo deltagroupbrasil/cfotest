@@ -1,0 +1,95 @@
+# Cloud Build Configuration for Analytics Service
+# Triggers: Push to main branch with changes in services/analytics_service/
+
+steps:
+  # Build the analytics service container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/delta-analytics-service:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/delta-analytics-service:latest'
+      - '-f'
+      - 'services/analytics_service/Dockerfile'
+      - '.'
+    id: 'build-image'
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/delta-analytics-service:$COMMIT_SHA'
+    id: 'push-image'
+    waitFor: ['build-image']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/delta-analytics-service:latest'
+    waitFor: ['build-image']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'delta-analytics-service'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/delta-analytics-service:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
+      - '300'
+      - '--max-instances'
+      - '5'
+      - '--min-instances'
+      - '0'
+      - '--set-env-vars'
+      - 'PYTHONPATH=/app,DATABASE_PATH=/app/web_ui/delta_transactions.db'
+      - '--tag'
+      - 'analytics-v${SHORT_SHA}'
+    id: 'deploy-service'
+    waitFor: ['push-image']
+
+  # Test the deployment
+  - name: 'gcr.io/cloud-builders/curl'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔍 Testing deployment..."
+        URL=$$(gcloud run services describe delta-analytics-service --region us-central1 --format="value(status.url)")
+        echo "📊 Service URL: $$URL"
+
+        echo "Testing health endpoint..."
+        curl -f "$$URL/" || echo "❌ Health check failed"
+
+        echo "Testing status endpoint..."
+        curl -f "$$URL/api/analytics/status" || echo "❌ Status check failed"
+
+        echo "✅ Analytics Service deployed successfully!"
+        echo "🚀 Available endpoints:"
+        echo "  - $$URL/api/analytics/monthly-summary"
+        echo "  - $$URL/api/analytics/entities"
+        echo "  - $$URL/api/analytics/categories"
+        echo "  - $$URL/api/analytics/dashboard"
+    waitFor: ['deploy-service']
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+# Images to be stored in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/delta-analytics-service:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/delta-analytics-service:latest'

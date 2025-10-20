@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta CFO Agent - Invoice Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            font-size: 2.5em;
+            margin-right: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1em;
+            color: #7f8c8d;
+            margin: 0;
+        }
+
+        .card-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0.5rem 0;
+        }
+
+        .card-subtitle {
+            color: #95a5a6;
+            font-size: 0.9em;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.4em;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .recent-activity {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #ecf0f1;
+            transition: background 0.2s ease;
+        }
+
+        .activity-item:hover {
+            background: #f8f9fa;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-info {
+            flex: 1;
+        }
+
+        .activity-vendor {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-details {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .activity-amount {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .amount-positive {
+            color: #27ae60;
+        }
+
+        .amount-negative {
+            color: #e74c3c;
+        }
+
+        .business-unit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .bu-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #3498db;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bu-card:hover {
+            transform: translateY(-3px);
+            border-left-width: 8px;
+        }
+
+        .bu-card.delta-llc {
+            border-left-color: #e74c3c;
+        }
+
+        .bu-card.prop-shop {
+            border-left-color: #f39c12;
+        }
+
+        .bu-card.infinity {
+            border-left-color: #9b59b6;
+        }
+
+        .bu-card.paraguay {
+            border-left-color: #27ae60;
+        }
+
+        .bu-card.brazil {
+            border-left-color: #3498db;
+        }
+
+        .bu-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .bu-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .bu-stat {
+            text-align: center;
+        }
+
+        .bu-stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .bu-stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .filter-group select {
+            padding: 0.5rem 1rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 5px;
+            background: white;
+            color: #2c3e50;
+            cursor: pointer;
+        }
+
+        .filter-group button {
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .filter-group button:hover {
+            transform: translateY(-2px);
+        }
+
+        .confidence-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .confidence-high {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .confidence-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .confidence-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .crypto-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .crypto-badge.crypto {
+            background: #f39c12;
+            color: white;
+        }
+
+        .crypto-badge.fiat {
+            background: #27ae60;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .business-unit-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Invoice Dashboard</h1>
+        <p>Delta CFO Agent - Análise Inteligente de Faturas</p>
+    </div>
+
+    <div class="container">
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="dateRange">Período:</label>
+                <select id="dateRange" onchange="updateDashboard()">
+                    <option value="7">Últimos 7 dias</option>
+                    <option value="30" selected>Últimos 30 dias</option>
+                    <option value="90">Últimos 90 dias</option>
+                    <option value="365">Último ano</option>
+                </select>
+                <button onclick="refreshDashboard()">🔄 Atualizar</button>
+                <button onclick="exportData()">📥 Exportar</button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📄</div>
+                    <div>
+                        <h3 class="card-title">Total de Faturas</h3>
+                    </div>
+                </div>
+                <div class="card-value">{{ data.total_invoices or 0 }}</div>
+                <div class="card-subtitle">{{ data.date_range or 'Período atual' }}</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">💰</div>
+                    <div>
+                        <h3 class="card-title">Valor Total</h3>
+                    </div>
+                </div>
+                <div class="card-value">${{ "%.2f"|format(data.summary.total_amount or 0) }}</div>
+                <div class="card-subtitle">Soma de todas as faturas</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📈</div>
+                    <div>
+                        <h3 class="card-title">Valor Médio</h3>
+                    </div>
+                </div>
+                <div class="card-value">${{ "%.2f"|format(data.summary.avg_amount or 0) }}</div>
+                <div class="card-subtitle">Por fatura processada</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🤖</div>
+                    <div>
+                        <h3 class="card-title">Confiança IA</h3>
+                    </div>
+                </div>
+                <div class="card-value">
+                    {% set high_conf = data.confidence_analysis.high.count %}
+                    {% set total = data.total_invoices or 1 %}
+                    {{ "%.0f"|format((high_conf / total) * 100) }}%
+                </div>
+                <div class="card-subtitle">Alta confiança (90%+)</div>
+            </div>
+        </div>
+
+        <!-- Business Units -->
+        <div class="business-unit-grid">
+            {% for bu_name, bu_data in data.business_units.items() %}
+            <div class="bu-card {{ bu_name.lower().replace(' ', '-').replace('.', '') }}" onclick="viewBusinessUnit('{{ bu_name }}')">
+                <div class="bu-name">{{ bu_name }}</div>
+                <div style="color: #7f8c8d; margin: 0.5rem 0;">
+                    {{ "%.1f"|format(bu_data.count_percentage or 0) }}% das faturas
+                </div>
+                <div class="bu-stats">
+                    <div class="bu-stat">
+                        <div class="bu-stat-value">{{ bu_data.count or 0 }}</div>
+                        <div class="bu-stat-label">Faturas</div>
+                    </div>
+                    <div class="bu-stat">
+                        <div class="bu-stat-value">${{ "%.0f"|format(bu_data.total_amount or 0) }}</div>
+                        <div class="bu-stat-label">Total</div>
+                    </div>
+                    <div class="bu-stat">
+                        <div class="bu-stat-value">${{ "%.0f"|format(bu_data.avg_amount or 0) }}</div>
+                        <div class="bu-stat-label">Média</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <h3 class="chart-title">Distribuição por Business Unit</h3>
+                <canvas id="businessUnitChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Categorias de Despesas</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Crypto vs Fiat</h3>
+                <canvas id="currencyChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Confiança IA</h3>
+                <canvas id="confidenceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="recent-activity">
+            <h3 class="chart-title">Atividade Recente</h3>
+            {% for invoice in data.recent_activity %}
+            <div class="activity-item">
+                <div class="activity-info">
+                    <div class="activity-vendor">{{ invoice.vendor_name or 'N/A' }}</div>
+                    <div class="activity-details">
+                        {{ invoice.business_unit or 'N/A' }} • {{ invoice.category or 'N/A' }}
+                        <span class="confidence-indicator {% if (invoice.confidence_score or 0.8) >= 0.9 %}confidence-high{% elif (invoice.confidence_score or 0.8) >= 0.7 %}confidence-medium{% else %}confidence-low{% endif %}">
+                            {{ "%.0f"|format((invoice.confidence_score or 0.8) * 100) }}%
+                        </span>
+                        <span class="crypto-badge {{ invoice.currency_type or 'fiat' }}">
+                            {{ invoice.currency or 'USD' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="activity-amount amount-negative">
+                    -${{ "%.2f"|format(invoice.total_amount or 0) }}
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not data.recent_activity %}
+            <div class="loading">
+                <p>Nenhuma fatura processada ainda.</p>
+                <p style="margin-top: 1rem;">
+                    <a href="/" style="color: #3498db;">📤 Processar primeira fatura</a>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Dashboard data from Flask
+        const dashboardData = {{ data | tojson }};
+
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+        });
+
+        function initializeCharts() {
+            // Business Unit Chart
+            const buCtx = document.getElementById('businessUnitChart').getContext('2d');
+            const buLabels = Object.keys(dashboardData.business_units || {});
+            const buValues = buLabels.map(bu => (dashboardData.business_units[bu] || {}).total_amount || 0);
+
+            new Chart(buCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: buLabels,
+                    datasets: [{
+                        data: buValues,
+                        backgroundColor: ['#e74c3c', '#f39c12', '#9b59b6', '#27ae60', '#3498db', '#95a5a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Category Chart
+            const catCtx = document.getElementById('categoryChart').getContext('2d');
+            const catLabels = Object.keys(dashboardData.categories || {});
+            const catValues = catLabels.map(cat => (dashboardData.categories[cat] || {}).total_amount || 0);
+
+            new Chart(catCtx, {
+                type: 'bar',
+                data: {
+                    labels: catLabels,
+                    datasets: [{
+                        label: 'Valor Total ($)',
+                        data: catValues,
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Currency Type Chart
+            const currCtx = document.getElementById('currencyChart').getContext('2d');
+            const currData = dashboardData.currencies || {};
+
+            new Chart(currCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Crypto', 'Fiat'],
+                    datasets: [{
+                        data: [
+                            (currData.cryptocurrency || {}).total_amount || 0,
+                            (currData.fiat || {}).total_amount || 0
+                        ],
+                        backgroundColor: ['#f39c12', '#27ae60']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Confidence Chart
+            const confCtx = document.getElementById('confidenceChart').getContext('2d');
+            const confData = dashboardData.confidence_analysis || {};
+
+            new Chart(confCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Alta (90%+)', 'Média (70-89%)', 'Baixa (50-69%)', 'Muito Baixa (<50%)'],
+                    datasets: [{
+                        label: 'Número de Faturas',
+                        data: [
+                            (confData.high || {}).count || 0,
+                            (confData.medium || {}).count || 0,
+                            (confData.low || {}).count || 0,
+                            (confData.very_low || {}).count || 0
+                        ],
+                        backgroundColor: ['#27ae60', '#f39c12', '#e74c3c', '#95a5a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDashboard() {
+            const days = document.getElementById('dateRange').value;
+            window.location.href = `/dashboard?days=${days}`;
+        }
+
+        function refreshDashboard() {
+            window.location.reload();
+        }
+
+        function exportData() {
+            // Implement data export functionality
+            alert('Funcionalidade de exportação será implementada em breve!');
+        }
+
+        function viewBusinessUnit(businessUnit) {
+            // Navigate to business unit details
+            window.open(`/api/business-unit/${encodeURIComponent(businessUnit)}`, '_blank');
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #3498db;
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 5px;
+                font-size: 0.9em;
+                z-index: 1000;
+            `;
+            indicator.textContent = '🔄 Atualizando dados...';
+            document.body.appendChild(indicator);
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }, 300000); // 5 minutes
+    </script>
+</body>
+</html>

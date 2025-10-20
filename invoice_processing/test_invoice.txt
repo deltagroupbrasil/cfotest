@@ -1,0 +1,30 @@
+INVOICE
+
+Invoice Number: INV-2024-001
+Date: September 25, 2024
+Due Date: October 25, 2024
+
+BILL TO:
+Delta LLC
+Cryptocurrency Operations Division
+Delaware, USA
+
+FROM:
+Amazon Web Services
+Cloud Computing Services
+Seattle, WA 98109
+
+DESCRIPTION                           QTY    RATE      TOTAL
+EC2 Instance Usage - Mining Ops       1     $2,450.00  $2,450.00
+S3 Storage - 10TB                     1     $250.00    $250.00
+CloudWatch Monitoring                 1     $75.00     $75.00
+Data Transfer                         1     $125.00    $125.00
+
+                           SUBTOTAL:   $2,900.00
+                           TAX (8.5%): $246.50
+                           TOTAL:      $3,146.50
+
+Payment Terms: Net 30 days
+Currency: USD
+
+Thank you for your business!

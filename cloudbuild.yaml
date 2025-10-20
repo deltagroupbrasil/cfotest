@@ -1,0 +1,42 @@
+steps:
+  # Build the container image using Dockerfile
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile', '-t', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/deltacfoagent/deltacfoagent:latest', '.']
+
+  # Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/deltacfoagent/deltacfoagent:latest']
+
+  # Deploy container image to Cloud Run in southamerica-east1
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'deltacfoagent'
+      - '--image'
+      - 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/deltacfoagent/deltacfoagent:latest'
+      - '--region'
+      - 'southamerica-east1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--port'
+      - '8080'
+      - '--timeout'
+      - '300'
+      - '--max-instances'
+      - '100'
+      - '--set-env-vars'
+      - 'DB_TYPE=postgresql,DB_HOST=34.39.143.82,DB_PORT=5432,DB_NAME=delta_cfo,DB_USER=delta_user,DB_SOCKET_PATH=/cloudsql/$PROJECT_ID:southamerica-east1:delta-cfo-db,FLASK_ENV=production'
+      - '--set-cloudsql-instances'
+      - '$PROJECT_ID:southamerica-east1:delta-cfo-db'
+      - '--set-secrets'
+      - 'DB_PASSWORD=db_password_sa:latest,ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest'
+
+images:
+  - 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/deltacfoagent/deltacfoagent:latest'

@@ -1,0 +1,2752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Delta CFO Agent - Revenue Recognition Dashboard (Simplified)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_advanced.css') }}?v={{ cache_buster }}&t=simplified">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Revenue Dashboard Specific Styles */
+        .revenue-controls {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .matching-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #3b82f6;
+        }
+
+        .stat-card.success {
+            border-left-color: #10b981;
+        }
+
+        .stat-card.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .stat-card.danger {
+            border-left-color: #ef4444;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-sublabel {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .matches-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            background: #3b82f6;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .badge.success {
+            background: #10b981;
+        }
+
+        .badge.warning {
+            background: #f59e0b;
+        }
+
+        .match-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .match-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .match-header {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .match-score {
+            font-weight: 700;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .score-high {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .score-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .score-low {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .match-details {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .invoice-details, .transaction-details {
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .invoice-details {
+            background: #f8fafc;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .transaction-details {
+            background: #f0fdf4;
+            border-left: 3px solid #10b981;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .detail-value {
+            color: #1e293b;
+        }
+
+        .match-actions {
+            padding: 1rem;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-confirm {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: #059669;
+        }
+
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #dc2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: #10b981;
+        }
+
+        .notification.error {
+            background: #ef4444;
+        }
+
+        .notification.warning {
+            background: #f59e0b;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-button.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .tab-button:hover:not(.active) {
+            background: #f3f4f6;
+        }
+
+        .explanation {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+
+        /* New styles for enhanced visual indicators */
+        .high-value {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .match-item.unlinked {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .match-item.matched {
+            border-left: 4px solid #10b981;
+        }
+
+        .match-item.pending {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-indicator.unlinked {
+            background: #f59e0b;
+        }
+
+        .status-indicator.matched {
+            background: #10b981;
+        }
+
+        .status-indicator.pending {
+            background: #3b82f6;
+        }
+
+        .visual-summary {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            align-items: center;
+        }
+
+        .visual-summary-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* Pagination Styles */
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .pagination-info {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .pagination-btn {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            min-width: 40px;
+        }
+
+        .pagination-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .pagination-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .pagination-btn:disabled {
+            background: #f9fafb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            border-color: #e5e7eb;
+        }
+
+        .pagination-ellipsis {
+            padding: 0 0.5rem;
+            color: #9ca3af;
+        }
+
+        .per-page-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .per-page-controls select {
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            color: #374151;
+        }
+
+        /* Improved description truncation styles */
+        .detail-value[title] {
+            cursor: help;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        .detail-value[title]:hover {
+            background-color: #f8fafc;
+            border-radius: 4px;
+            padding: 2px 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        /* Better visual separation for transactions */
+        .transaction-description {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: #4a5568;
+            background: #f7fafc;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .match-details {
+                grid-template-columns: 1fr;
+            }
+
+            .matching-actions {
+                flex-direction: column;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .pagination-controls {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .pagination-buttons {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .per-page-controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <h2>Delta CFO Agent</h2>
+                <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Delta's proprietary self improving AI CFO Agent</p>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/dashboard" class="nav-link">Expenses</a>
+                <a href="/revenue" class="nav-link active">Revenue Recognition</a>
+                <a href="/cfo-dashboard" class="nav-link">Reports</a>
+                <a href="/invoices" class="nav-link">Invoices</a>
+                <a href="/files" class="nav-link">File Manager</a>
+            </div>
+        </nav>
+
+        <div class="main-layout">
+            <div class="dashboard-content">
+                <header>
+                    <h1>💰 Revenue Recognition Dashboard</h1>
+                    <p style="color: #64748b; margin-bottom: 2rem;">Automated invoice-transaction matching with AI intelligence</p>
+                </header>
+
+                <!-- Revenue Matching Statistics -->
+                <div class="stats-grid" id="stats-grid">
+                    <!-- Stats will be loaded dynamically -->
+                </div>
+
+                <!-- Matching Controls -->
+                <div class="revenue-controls">
+                    <h2>🔍 Auto-Match Invoices</h2>
+                    <p style="color: #64748b; margin-bottom: 1.5rem;">Run matching to automatically find and link invoices to transactions. Choose between fast matching (seconds) or AI-powered deep analysis (minutes).</p>
+                    <div class="matching-actions">
+                        <button class="action-button btn-primary" onclick="runMatching(false)">
+                            ⚡ Quick Match (Fast)
+                        </button>
+                        <button class="action-button btn-secondary" onclick="runMatching(true)">
+                            🧠 AI Enhanced Match
+                        </button>
+                    </div>
+
+                    <!-- Advanced Options (collapsed by default) -->
+                    <div style="margin-top: 1rem;">
+                        <button class="action-button" onclick="toggleAdvancedOptions()" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; font-size: 0.875rem;">
+                            ⚙️ More Options
+                        </button>
+                    </div>
+
+                    <div id="advanced-options" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="action-button btn-warning" onclick="refreshData()" style="font-size: 0.875rem;">
+                                🔄 Refresh Data
+                            </button>
+                            <button class="action-button btn-secondary" onclick="showMatchedPairs()" style="font-size: 0.875rem;">
+                                📋 View All Matches
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="matching-progress" style="display: none;">
+                        <p><strong>Running matching process...</strong></p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Matches Section - MOVED TO TOP -->
+                <div class="matches-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            🔍 Pending Matches for Review
+                            <span class="badge warning" id="pending-count">0</span>
+                        </h2>
+                        <div class="filter-tabs">
+                            <button class="tab-button active" onclick="filterMatches('all')">All</button>
+                            <button class="tab-button" onclick="filterMatches('high')">High Confidence</button>
+                            <button class="tab-button" onclick="filterMatches('medium')">Medium Confidence</button>
+                        </div>
+                    </div>
+
+                    <div id="pending-matches">
+                        <!-- Pending matches will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Unlinked Invoices Section -->
+                <div class="matches-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            🔗 Unlinked Invoices Ready for Matching
+                            <span class="badge warning" id="unlinked-count">0</span>
+                        </h2>
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="action-button btn-primary" onclick="loadUnlinkedInvoices()" style="font-size: 0.875rem;">
+                                🔄 Refresh Unlinked
+                            </button>
+                            <button class="action-button btn-success" onclick="quickMatchAll()" style="font-size: 0.875rem;">
+                                ⚡ Quick Match All
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="filter-tabs">
+                        <button class="tab-button active" onclick="filterUnlinkedInvoices('all')">All Unlinked</button>
+                        <button class="tab-button" onclick="filterUnlinkedInvoices('recent')">Recent (30 days)</button>
+                        <button class="tab-button" onclick="filterUnlinkedInvoices('high-value')">High Value ($1000+)</button>
+                    </div>
+
+                    <div id="unlinked-invoices">
+                        <!-- Unlinked invoices will be loaded here -->
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div id="unlinked-pagination">
+                        <!-- Pagination controls will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Recent Matches Section -->
+                <div class="matches-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            ✅ Recent Confirmed Matches
+                            <span class="badge success" id="confirmed-count">0</span>
+                        </h2>
+                        <button class="action-button btn-secondary" onclick="loadMatchedPairs()">
+                            View All Confirmed
+                        </button>
+                    </div>
+
+                    <div id="confirmed-matches">
+                        <!-- Confirmed matches will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentMatches = [];
+        let currentFilter = 'all';
+        let matchingInProgress = false;
+        let currentUnlinkedInvoices = [];
+        let currentUnlinkedFilter = 'all';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadUnlinkedInvoices();
+            loadPendingMatches();
+            loadRecentMatches();
+
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
+
+        // Load revenue matching statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/revenue/stats');
+                const data = await response.json();
+
+                if (data.success) {
+                    renderStats(data.stats);
+                } else {
+                    showNotification('Failed to load statistics', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                showNotification('Error loading statistics', 'error');
+            }
+        }
+
+        // Render statistics cards
+        function renderStats(stats) {
+            const statsGrid = document.getElementById('stats-grid');
+
+            const matchRate = stats.match_rate || 0;
+            const matchRateClass = matchRate >= 80 ? 'success' : matchRate >= 60 ? 'warning' : 'danger';
+
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total Invoices</div>
+                    <div class="stat-value">${stats.total_invoices || 0}</div>
+                    <div class="stat-sublabel">In the system</div>
+                </div>
+
+                <div class="stat-card success">
+                    <div class="stat-label">Matched Invoices</div>
+                    <div class="stat-value">${stats.matched_invoices || 0}</div>
+                    <div class="stat-sublabel">$${(stats.matched_revenue || 0).toLocaleString()}</div>
+                </div>
+
+                <div class="stat-card warning">
+                    <div class="stat-label">Unmatched Invoices</div>
+                    <div class="stat-value">${stats.unmatched_invoices || 0}</div>
+                    <div class="stat-sublabel">$${(stats.unmatched_revenue || 0).toLocaleString()}</div>
+                </div>
+
+                <div class="stat-card ${matchRateClass}">
+                    <div class="stat-label">Match Rate</div>
+                    <div class="stat-value">${matchRate.toFixed(1)}%</div>
+                    <div class="stat-sublabel">Automation success</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Pending Review</div>
+                    <div class="stat-value">${stats.pending_matches || 0}</div>
+                    <div class="stat-sublabel">Awaiting approval</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Recent Activity</div>
+                    <div class="stat-value">${stats.recent_matches || 0}</div>
+                    <div class="stat-sublabel">Last 30 days</div>
+                </div>
+
+                <div class="stat-card warning">
+                    <div class="stat-label">Unlinked Transactions</div>
+                    <div class="stat-value">${stats.unlinked_transactions || 0}</div>
+                    <div class="stat-sublabel">Total transactions without invoice</div>
+                </div>
+
+                <div class="stat-card danger">
+                    <div class="stat-label">Unlinked Revenue Transactions</div>
+                    <div class="stat-value">${stats.unlinked_revenue_transactions || 0}</div>
+                    <div class="stat-sublabel">Positive amounts needing match</div>
+                </div>
+            `;
+
+            // Update badges
+            document.getElementById('pending-count').textContent = stats.pending_matches || 0;
+            document.getElementById('confirmed-count').textContent = stats.matched_invoices || 0;
+            document.getElementById('unlinked-count').textContent = stats.unmatched_invoices || 0;
+        }
+
+        // Global pagination state
+        let currentUnlinkedPage = 1;
+        let unlinkedPerPage = 20;
+        let totalUnlinkedInvoices = 0;
+        let totalUnlinkedPages = 0;
+
+        // Load unlinked invoices with pagination
+        async function loadUnlinkedInvoices(page = 1) {
+            try {
+                currentUnlinkedPage = page;
+                const response = await fetch(`/api/invoices?linked_transaction_id=unlinked&page=${page}&per_page=${unlinkedPerPage}`);
+                const data = await response.json();
+
+                if (data.invoices) {
+                    currentUnlinkedInvoices = data.invoices || [];
+
+                    // Update pagination info
+                    if (data.pagination) {
+                        totalUnlinkedInvoices = data.pagination.total;
+                        totalUnlinkedPages = data.pagination.pages;
+                        currentUnlinkedPage = data.pagination.page;
+                    }
+
+                    renderUnlinkedInvoices(currentUnlinkedInvoices);
+                    renderUnlinkedPagination();
+                } else {
+                    showNotification('Failed to load unlinked invoices', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading unlinked invoices:', error);
+                showNotification('Error loading unlinked invoices', 'error');
+            }
+        }
+
+        // Render unlinked invoices
+        function renderUnlinkedInvoices(invoices) {
+            const container = document.getElementById('unlinked-invoices');
+
+            if (!invoices || invoices.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✅</div>
+                        <h3>Great! All invoices are matched!</h3>
+                        <p>No unlinked invoices found. All invoices have been successfully matched to transactions.</p>
+                        <button class="action-button btn-primary" onclick="loadUnlinkedInvoices()" style="margin-top: 1rem;">
+                            🔄 Refresh to Check for New Invoices
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Filter invoices based on current filter
+            let filteredInvoices = invoices;
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+            if (currentUnlinkedFilter === 'recent') {
+                filteredInvoices = invoices.filter(invoice => {
+                    const invoiceDate = new Date(invoice.date);
+                    return invoiceDate >= thirtyDaysAgo;
+                });
+            } else if (currentUnlinkedFilter === 'high-value') {
+                filteredInvoices = invoices.filter(invoice => invoice.total_amount >= 1000);
+            }
+
+            const invoicesHtml = filteredInvoices.map(invoice => {
+                const statusClass = invoice.payment_status === 'paid' ? 'success' :
+                                   invoice.payment_status === 'overdue' ? 'danger' : 'warning';
+
+                const amountClass = invoice.total_amount >= 1000 ? 'high-value' : '';
+
+                return `
+                    <div class="match-item">
+                        <div class="match-header">
+                            <div style="flex: 1;">
+                                <strong>Invoice #${invoice.invoice_number}</strong>
+                                <span style="margin-left: 1rem; color: #6b7280;">
+                                    ${invoice.vendor_name || 'Unknown Vendor'}
+                                </span>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <div class="badge ${statusClass}">
+                                    ${(invoice.payment_status || 'pending').toUpperCase()}
+                                </div>
+                                ${invoice.total_amount >= 1000 ? '<div class="badge warning">High Value</div>' : ''}
+                            </div>
+                        </div>
+
+                        <!-- Standardized Comparison Table for Unlinked Invoices -->
+                        <div class="comparison-table" style="margin: 1rem 0;">
+                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <thead>
+                                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                                        <th style="padding: 1rem; text-align: left; color: #374151; font-weight: 600; width: 120px;">Field</th>
+                                        <th style="padding: 1rem; text-align: left; color: #3b82f6; font-weight: 600; border-left: 1px solid #e2e8f0;">📄 Invoice</th>
+                                        <th style="padding: 1rem; text-align: left; color: #f59e0b; font-weight: 600; border-left: 1px solid #e2e8f0;">🔍 Status</th>
+                                        <th style="padding: 1rem; text-align: center; color: #6b7280; font-weight: 600; width: 100px; border-left: 1px solid #e2e8f0;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 0.75rem; font-weight: 600; color: #374151;">Amount</td>
+                                        <td style="padding: 0.75rem; border-left: 1px solid #e2e8f0; background: #fef7f0;">
+                                            <span style="font-weight: 700; color: #1e293b; font-size: 1.1rem;" class="${amountClass}">
+                                                ${invoice.currency || 'USD'} ${(invoice.total_amount || 0).toLocaleString()}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 0.75rem; border-left: 1px solid #e2e8f0; background: #fff8dc;">
+                                            <span style="color: #f59e0b; font-weight: bold; font-size: 0.875rem;">
+                                                UNLINKED
+                                            </span>
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                ${invoice.total_amount >= 1000 ? 'High Value - Priority' : 'Standard Amount'}
+                                            </div>
+                                        </td>
+                                        <td style="padding: 0.75rem; text-align: center; border-left: 1px solid #e2e8f0;" rowspan="3">
+                                            <button class="action-btn btn-primary" onclick="quickMatchSingle('${invoice.id}')" style="display: block; margin: 0.25rem auto; font-size: 0.75rem; padding: 0.5rem 0.75rem;">
+                                                ⚡ Quick Match
+                                            </button>
+                                            <button class="action-btn btn-secondary" onclick="viewInvoiceDetails('${invoice.id}')" style="display: block; margin: 0.25rem auto; font-size: 0.75rem; padding: 0.5rem 0.75rem;">
+                                                👁️ View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 0.75rem; font-weight: 600; color: #374151;">Date</td>
+                                        <td style="padding: 0.75rem; border-left: 1px solid #e2e8f0; background: #fef7f0;">
+                                            <div style="font-weight: 600; color: #374151; margin-bottom: 0.25rem;">
+                                                ${invoice.date || 'N/A'}
+                                            </div>
+                                            ${invoice.payment_due_date ? `
+                                            <div style="color: #6b7280; font-size: 0.75rem;">
+                                                Due: ${invoice.payment_due_date}
+                                            </div>
+                                            ` : ''}
+                                        </td>
+                                        <td style="padding: 0.75rem; border-left: 1px solid #e2e8f0; background: #fff8dc;">
+                                            <span style="color: #6b7280; font-size: 0.875rem;">
+                                                Awaiting matching
+                                            </span>
+                                            <div style="color: #f59e0b; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                ${invoice.payment_status === 'overdue' ? '⚠️ Overdue' :
+                                                  invoice.payment_status === 'paid' ? '✅ Paid' : '⏳ Pending'}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 0.75rem; font-weight: 600; color: #374151;">Reference</td>
+                                        <td style="padding: 0.75rem; border-left: 1px solid #e2e8f0; background: #fef7f0;">
+                                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                                                #${invoice.invoice_number}
+                                            </div>
+                                            <div style="color: #374151; font-weight: 500;">
+                                                ${invoice.vendor_name || 'Unknown Vendor'}
+                                            </div>
+                                            ${invoice.items ? `
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;" title="${invoice.items}">
+                                                Items: ${invoice.items.substring(0, 30)}${invoice.items.length > 30 ? '...' : ''}
+                                            </div>
+                                            ` : ''}
+                                        </td>
+                                        <td style="padding: 0.75rem; border-left: 1px solid #e2e8f0; background: #fff8dc;">
+                                            <span style="color: #f59e0b; font-size: 0.875rem;">
+                                                No transaction match
+                                            </span>
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                Run matching to find candidates
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="explanation" style="margin-top: 1rem; color: #f59e0b; font-size: 0.875rem;">
+                            <strong>⚡ Action needed:</strong> This invoice has not been matched to any transaction yet.
+                            Use Quick Match to automatically find potential transaction matches.
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Show count information
+            const countInfo = filteredInvoices.length !== invoices.length ?
+                `<p style="color: #6b7280; margin-bottom: 1rem; text-align: center;">
+                    Showing ${filteredInvoices.length} of ${invoices.length} unlinked invoices
+                </p>` : '';
+
+            container.innerHTML = countInfo + invoicesHtml;
+        }
+
+        // Render pagination controls for unlinked invoices
+        function renderUnlinkedPagination() {
+            const paginationContainer = document.getElementById('unlinked-pagination');
+            if (!paginationContainer) return;
+
+            if (totalUnlinkedPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let paginationHtml = `
+                <div class="pagination-controls">
+                    <div class="pagination-info">
+                        Showing ${(currentUnlinkedPage - 1) * unlinkedPerPage + 1}-${Math.min(currentUnlinkedPage * unlinkedPerPage, totalUnlinkedInvoices)} of ${totalUnlinkedInvoices} invoices
+                    </div>
+                    <div class="pagination-buttons">
+            `;
+
+            // Previous button
+            if (currentUnlinkedPage > 1) {
+                paginationHtml += `
+                    <button class="pagination-btn" onclick="loadUnlinkedInvoices(${currentUnlinkedPage - 1})">
+                        ← Previous
+                    </button>
+                `;
+            }
+
+            // Page numbers
+            const startPage = Math.max(1, currentUnlinkedPage - 2);
+            const endPage = Math.min(totalUnlinkedPages, currentUnlinkedPage + 2);
+
+            if (startPage > 1) {
+                paginationHtml += `<button class="pagination-btn" onclick="loadUnlinkedInvoices(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHtml += `<span class="pagination-ellipsis">...</span>`;
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const activeClass = i === currentUnlinkedPage ? 'active' : '';
+                paginationHtml += `
+                    <button class="pagination-btn ${activeClass}" onclick="loadUnlinkedInvoices(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            if (endPage < totalUnlinkedPages) {
+                if (endPage < totalUnlinkedPages - 1) {
+                    paginationHtml += `<span class="pagination-ellipsis">...</span>`;
+                }
+                paginationHtml += `<button class="pagination-btn" onclick="loadUnlinkedInvoices(${totalUnlinkedPages})">${totalUnlinkedPages}</button>`;
+            }
+
+            // Next button
+            if (currentUnlinkedPage < totalUnlinkedPages) {
+                paginationHtml += `
+                    <button class="pagination-btn" onclick="loadUnlinkedInvoices(${currentUnlinkedPage + 1})">
+                        Next →
+                    </button>
+                `;
+            }
+
+            paginationHtml += `
+                    </div>
+                    <div class="per-page-controls">
+                        <label for="per-page-select">Per page:</label>
+                        <select id="per-page-select" onchange="changePerPage(this.value)" style="margin-left: 0.5rem; padding: 0.25rem;">
+                            <option value="10" ${unlinkedPerPage === 10 ? 'selected' : ''}>10</option>
+                            <option value="20" ${unlinkedPerPage === 20 ? 'selected' : ''}>20</option>
+                            <option value="50" ${unlinkedPerPage === 50 ? 'selected' : ''}>50</option>
+                            <option value="100" ${unlinkedPerPage === 100 ? 'selected' : ''}>100</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            paginationContainer.innerHTML = paginationHtml;
+        }
+
+        // Change items per page
+        function changePerPage(newPerPage) {
+            unlinkedPerPage = parseInt(newPerPage);
+            loadUnlinkedInvoices(1); // Reset to page 1 when changing per page
+        }
+
+        // Filter unlinked invoices
+        function filterUnlinkedInvoices(filter) {
+            currentUnlinkedFilter = filter;
+
+            // Update tab styles
+            const tabs = document.querySelectorAll('.filter-tabs .tab-button');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Re-render with filter
+            renderUnlinkedInvoices(currentUnlinkedInvoices);
+        }
+
+        // Quick match for a single invoice
+        async function quickMatchSingle(invoiceId) {
+            try {
+                const response = await fetch('/api/revenue/run-matching', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        invoice_id: invoiceId,
+                        auto_apply: false
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification(`Found ${result.total_matches || 0} potential matches for this invoice`, 'success');
+                    await refreshData();
+                } else {
+                    showNotification('Quick match failed: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error in quick match:', error);
+                showNotification('Error running quick match', 'error');
+            }
+        }
+
+        // Quick match all unlinked invoices
+        async function quickMatchAll() {
+            if (currentUnlinkedInvoices.length === 0) {
+                showNotification('No unlinked invoices to match', 'warning');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to run quick match on all ${currentUnlinkedInvoices.length} unlinked invoices?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/revenue/run-matching', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        auto_apply: false
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const message = `Quick match completed! Found ${result.total_matches || 0} potential matches. ` +
+                                   `${result.auto_applied || 0} auto-applied, ${result.pending_review || 0} pending review.`;
+                    showNotification(message, 'success');
+                    await refreshData();
+                } else {
+                    showNotification('Quick match failed: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error in quick match all:', error);
+                showNotification('Error running quick match on all invoices', 'error');
+            }
+        }
+
+        // View invoice details
+        function viewInvoiceDetails(invoiceId) {
+            // Open the invoices page filtered to this specific invoice
+            window.open(`/invoices?search=${invoiceId}`, '_blank');
+        }
+
+        // Run matching process
+        async function runMatching(autoApply = false) {
+            if (matchingInProgress) {
+                showNotification('Matching already in progress', 'warning');
+                return;
+            }
+
+            matchingInProgress = true;
+            const progressDiv = document.getElementById('matching-progress');
+            progressDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/revenue/run-matching', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        auto_apply: autoApply
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const message = `Found ${result.total_matches} matches. ` +
+                                  `${result.auto_applied} auto-applied, ${result.pending_review} pending review.`;
+                    showNotification(message, 'success');
+
+                    // Refresh data
+                    await refreshData();
+                } else {
+                    showNotification('Matching failed: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error running matching:', error);
+                showNotification('Error running matching process', 'error');
+            } finally {
+                matchingInProgress = false;
+                progressDiv.style.display = 'none';
+            }
+        }
+
+        // Global pagination state for pending matches
+        let currentPendingPage = 1;
+        let pendingPerPage = 10;
+        let totalPendingMatches = 0;
+        let totalPendingPages = 0;
+
+        // Load pending matches with pagination
+        async function loadPendingMatches(page = 1) {
+            try {
+                currentPendingPage = page;
+                const response = await fetch(`/api/revenue/pending-matches?page=${page}&per_page=${pendingPerPage}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    currentMatches = data.matches || [];
+
+                    // Update pagination info
+                    if (data.pagination) {
+                        totalPendingMatches = data.pagination.total;
+                        totalPendingPages = data.pagination.pages;
+                        currentPendingPage = data.pagination.page;
+                    } else {
+                        // If no pagination info, assume all matches are returned
+                        totalPendingMatches = currentMatches.length;
+                        totalPendingPages = 1;
+                    }
+
+                    renderPendingMatches(currentMatches);
+                    renderPendingPagination();
+                } else {
+                    showNotification('Failed to load pending matches', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading pending matches:', error);
+            }
+        }
+
+        // Render pending matches
+        function renderPendingMatches(matches) {
+            const container = document.getElementById('pending-matches');
+
+            if (!matches || matches.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎉</div>
+                        <h3>No pending matches!</h3>
+                        <p>All invoices are either matched or no matches were found. Try running the matching process to find new matches.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Filter matches based on current filter
+            let filteredMatches = matches;
+            if (currentFilter === 'high') {
+                filteredMatches = matches.filter(m => m.confidence_level === 'HIGH');
+            } else if (currentFilter === 'medium') {
+                filteredMatches = matches.filter(m => m.confidence_level === 'MEDIUM');
+            }
+
+            const matchesHtml = filteredMatches.map(match => {
+                const scoreClass = match.confidence_level === 'HIGH' ? 'score-high' :
+                                 match.confidence_level === 'MEDIUM' ? 'score-medium' : 'score-low';
+
+                return `
+                    <div class="match-item">
+                        <div class="match-header">
+                            <div style="flex: 1;">
+                                <strong>Match Score: <span class="match-score ${scoreClass}">${(match.score * 100).toFixed(1)}%</span></strong>
+                                <span style="margin-left: 1rem; color: #6b7280;">${match.match_type}</span>
+                            </div>
+                            <div class="badge ${match.confidence_level === 'HIGH' ? 'success' : 'warning'}">
+                                ${match.confidence_level}
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Comparison Table with Expanded Information -->
+                        <div class="comparison-table" style="margin: 1rem 0;">
+                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                <thead>
+                                    <tr style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-bottom: 3px solid #cbd5e1;">
+                                        <th style="padding: 1.25rem; text-align: left; color: #374151; font-weight: 700; width: 140px; font-size: 0.95rem;">Criteria</th>
+                                        <th style="padding: 1.25rem; text-align: left; color: #3b82f6; font-weight: 700; border-left: 2px solid #cbd5e1; font-size: 0.95rem;">📄 Invoice Details</th>
+                                        <th style="padding: 1.25rem; text-align: left; color: #10b981; font-weight: 700; border-left: 2px solid #cbd5e1; font-size: 0.95rem;">💰 Transaction Details</th>
+                                        <th style="padding: 1.25rem; text-align: center; color: #6b7280; font-weight: 700; width: 120px; border-left: 2px solid #cbd5e1; font-size: 0.95rem;">Match Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 2px solid #f1f5f9;">
+                                        <td style="padding: 1rem; font-weight: 700; color: #374151; background: #fafbfc;">💵 Amount</td>
+                                        <td style="padding: 1rem; border-left: 2px solid #cbd5e1; background: #fef9f4;">
+                                            <div style="font-weight: 800; color: #1e293b; font-size: 1.2rem; margin-bottom: 0.5rem;">
+                                                ${match.invoice.currency || 'USD'} ${match.invoice.amount.toLocaleString()}
+                                            </div>
+                                            <div style="color: #6b7280; font-size: 0.8rem;">
+                                                <strong>Type:</strong> ${match.invoice.invoice_type || 'Standard'}
+                                            </div>
+                                            ${match.invoice.subtotal ? `
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                Subtotal: ${match.invoice.currency || 'USD'} ${match.invoice.subtotal}
+                                            </div>
+                                            ` : ''}
+                                        </td>
+                                        <td style="padding: 1rem; border-left: 2px solid #cbd5e1; background: #f0fdf7;">
+                                            <div style="font-weight: 800; color: #1e293b; font-size: 1.2rem; margin-bottom: 0.5rem;">
+                                                USD $${match.transaction.amount.toLocaleString()}
+                                            </div>
+                                            <div style="color: #6b7280; font-size: 0.8rem;">
+                                                <strong>Category:</strong> ${match.transaction.accounting_category || 'Unclassified'}
+                                            </div>
+                                            ${match.transaction.crypto_amount ? `
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                Crypto: ${match.transaction.crypto_amount}
+                                            </div>
+                                            ` : ''}
+                                        </td>
+                                        <td style="padding: 1rem; text-align: center; border-left: 2px solid #cbd5e1; background: #fafbfc;">
+                                            ${(() => {
+                                                const amountDiff = Math.abs(match.invoice.amount - match.transaction.amount);
+                                                const amountPercent = (amountDiff / match.invoice.amount) * 100;
+                                                if (amountPercent < 1) {
+                                                    return '<div style="color: #10b981; font-weight: bold; font-size: 1.2rem;">💯</div><div style="font-size: 0.7rem; color: #10b981;">EXACT</div>';
+                                                } else if (amountPercent < 5) {
+                                                    return `<div style="color: #f59e0b; font-weight: bold; font-size: 1.1rem;">📊</div><div style="font-size: 0.7rem; color: #f59e0b;">${amountPercent.toFixed(1)}% diff</div>`;
+                                                } else {
+                                                    return `<div style="color: #ef4444; font-weight: bold; font-size: 1.1rem;">📉</div><div style="font-size: 0.7rem; color: #ef4444;">${amountPercent.toFixed(1)}% diff</div>`;
+                                                }
+                                            })()}
+                                        </td>
+                                    </tr>
+                                    <tr style="border-bottom: 2px solid #f1f5f9;">
+                                        <td style="padding: 1rem; font-weight: 700; color: #374151; background: #fafbfc;">📅 Date</td>
+                                        <td style="padding: 1rem; border-left: 2px solid #cbd5e1; background: #fef9f4;">
+                                            <div style="font-weight: 700; color: #374151; margin-bottom: 0.5rem; font-size: 1rem;">
+                                                ${match.invoice.date}
+                                            </div>
+                                            ${match.invoice.due_date ? `
+                                            <div style="color: #f59e0b; font-size: 0.8rem; margin-bottom: 0.25rem;">
+                                                <strong>Due:</strong> ${match.invoice.due_date}
+                                            </div>
+                                            ` : ''}
+                                            <div style="color: #6b7280; font-size: 0.75rem;">
+                                                ${match.invoice.payment_status ? `Status: ${match.invoice.payment_status.toUpperCase()}` : 'Status: PENDING'}
+                                            </div>
+                                        </td>
+                                        <td style="padding: 1rem; border-left: 2px solid #cbd5e1; background: #f0fdf7;">
+                                            <div style="font-weight: 700; color: #374151; margin-bottom: 0.5rem; font-size: 1rem;">
+                                                ${match.transaction.date}
+                                            </div>
+                                            <div style="color: #6b7280; font-size: 0.8rem;">
+                                                <strong>Source:</strong> ${match.transaction.source_file || 'Direct entry'}
+                                            </div>
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">
+                                                ID: ${match.transaction_id}
+                                            </div>
+                                        </td>
+                                        <td style="padding: 1rem; text-align: center; border-left: 2px solid #cbd5e1; background: #fafbfc;">
+                                            ${(() => {
+                                                const invoiceDate = new Date(match.invoice.date);
+                                                const transactionDate = new Date(match.transaction.date);
+                                                const daysDiff = Math.abs(Math.floor((invoiceDate - transactionDate) / (1000 * 60 * 60 * 24)));
+
+                                                if (daysDiff === 0) {
+                                                    return '<div style="color: #10b981; font-weight: bold; font-size: 1.2rem;">🎯</div><div style="font-size: 0.7rem; color: #10b981;">SAME DAY</div>';
+                                                } else if (daysDiff <= 7) {
+                                                    return `<div style="color: #3b82f6; font-weight: bold; font-size: 1.1rem;">📅</div><div style="font-size: 0.7rem; color: #3b82f6;">${daysDiff} days</div>`;
+                                                } else {
+                                                    return `<div style="color: #f59e0b; font-weight: bold; font-size: 1.1rem;">⏰</div><div style="font-size: 0.7rem; color: #f59e0b;">${daysDiff} days</div>`;
+                                                }
+                                            })()}
+                                        </td>
+                                    </tr>
+                                    <tr style="border-bottom: 2px solid #f1f5f9;">
+                                        <td style="padding: 1rem; font-weight: 700; color: #374151; background: #fafbfc;">🏢 Business</td>
+                                        <td style="padding: 1rem; border-left: 2px solid #cbd5e1; background: #fef9f4;">
+                                            <div style="color: #374151; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                                ${match.invoice.vendor_name}
+                                            </div>
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-bottom: 0.25rem;">
+                                                Invoice: #${match.invoice.number}
+                                            </div>
+                                            ${match.invoice.customer_name ? `
+                                            <div style="color: #6b7280; font-size: 0.75rem;">
+                                                Customer: ${match.invoice.customer_name}
+                                            </div>
+                                            ` : ''}
+                                        </td>
+                                        <td style="padding: 1rem; border-left: 2px solid #cbd5e1; background: #f0fdf7;">
+                                            <div style="color: #374151; font-size: 0.85rem; margin-bottom: 0.5rem; max-width: 250px; overflow: hidden; text-overflow: ellipsis;" title="${match.transaction.description}">
+                                                <strong>Description:</strong><br>
+                                                ${match.transaction.description.length > 60 ?
+                                                    match.transaction.description.substring(0, 60) + '...' :
+                                                    match.transaction.description}
+                                            </div>
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-bottom: 0.25rem;">
+                                                <strong>Entity:</strong> ${match.transaction.classified_entity || 'Unclassified'}
+                                            </div>
+                                            ${match.transaction.origin && match.transaction.destination ? `
+                                            <div style="color: #6b7280; font-size: 0.7rem;">
+                                                ${match.transaction.origin} → ${match.transaction.destination}
+                                            </div>
+                                            ` : ''}
+                                        </td>
+                                        <td style="padding: 1rem; text-align: center; border-left: 2px solid #cbd5e1; background: #fafbfc;">
+                                            ${(() => {
+                                                // Business entity matching logic
+                                                const vendorName = (match.invoice.vendor_name || '').toLowerCase();
+                                                const entityName = (match.transaction.classified_entity || '').toLowerCase();
+                                                const hasEntityMatch = vendorName.includes(entityName.split(' ')[0]) || entityName.includes(vendorName.split(' ')[0]);
+
+                                                if (hasEntityMatch) {
+                                                    return '<div style="color: #10b981; font-weight: bold; font-size: 1.2rem;">🤝</div><div style="font-size: 0.7rem; color: #10b981;">MATCH</div>';
+                                                } else {
+                                                    return '<div style="color: #6b7280; font-weight: bold; font-size: 1.1rem;">❓</div><div style="font-size: 0.7rem; color: #6b7280;">PATTERN</div>';
+                                                }
+                                            })()}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 1rem; font-weight: 700; color: #374151; background: #fafbfc;">📊 Context</td>
+                                        <td style="padding: 1rem; border-left: 2px solid #cbd5e1; background: #fef9f4;">
+                                            <div style="color: #374151; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                                                <strong>Business Unit:</strong> ${match.invoice.business_unit || 'Not specified'}
+                                            </div>
+                                            ${match.invoice.line_items && match.invoice.line_items.length > 0 ? `
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-bottom: 0.25rem;">
+                                                <strong>Items:</strong> ${match.invoice.line_items.length} line items
+                                            </div>
+                                            <div style="color: #6b7280; font-size: 0.7rem; max-height: 40px; overflow: hidden;">
+                                                ${match.invoice.line_items.slice(0, 2).map(item =>
+                                                    `• ${item.description || 'Item'}: $${(item.total || 0).toLocaleString()}`
+                                                ).join('<br>')}
+                                                ${match.invoice.line_items.length > 2 ? '<br>...' : ''}
+                                            </div>
+                                            ` : ''}
+                                        </td>
+                                        <td style="padding: 1rem; border-left: 2px solid #cbd5e1; background: #f0fdf7;">
+                                            <div style="color: #374151; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                                                <strong>Confidence:</strong> ${((match.transaction.confidence || 0) * 100).toFixed(0)}%
+                                            </div>
+                                            <div style="color: #6b7280; font-size: 0.75rem; margin-bottom: 0.25rem;">
+                                                <strong>Justification:</strong>
+                                            </div>
+                                            <div style="color: #6b7280; font-size: 0.7rem; max-height: 40px; overflow: hidden;">
+                                                ${match.transaction.justification || 'Auto-classified'}
+                                            </div>
+                                        </td>
+                                        <td style="padding: 1rem; text-align: center; border-left: 2px solid #cbd5e1; background: #fafbfc;">
+                                            <div style="color: #3b82f6; font-weight: bold; font-size: 1.5rem; margin-bottom: 0.25rem;">
+                                                ${(match.score * 100).toFixed(0)}%
+                                            </div>
+                                            <div style="font-size: 0.7rem; color: #6b7280;">
+                                                ${match.confidence_level}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Context Actions Panel -->
+                        <div class="context-actions-panel" style="margin: 1rem 0; padding: 1rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="margin: 0; color: #374151; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    🔍 Context Actions
+                                </h4>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button class="context-btn" onclick="viewInvoiceDetailsModal('${match.invoice_id}')" style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+                                        📄 View Invoice
+                                    </button>
+                                    <button class="context-btn" onclick="viewTransactionChain('${match.transaction_id}')" style="padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+                                        ⛓️ Transaction Chain
+                                    </button>
+                                    <button class="context-btn" onclick="showSimilarMatches('${match.invoice.vendor_name}', '${match.invoice.amount}', '${match.invoice.date}', ${match.id})" style="padding: 0.5rem 1rem; background: #f59e0b; color: white; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+                                        🔍 Similar Matches
+                                    </button>
+                                    <button class="context-btn" onclick="showVendorHistory('${match.invoice.vendor_name}')" style="padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+                                        🏢 Vendor History
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Enhanced Match Scoring Breakdown -->
+                            <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <h5 style="margin: 0 0 0.75rem 0; color: #374151; font-size: 0.9rem;">📊 Match Criteria Breakdown</h5>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                    ${(() => {
+                                        // Calculate individual scores for visual representation
+                                        const amountDiff = Math.abs(match.invoice.amount - match.transaction.amount);
+                                        const amountScore = Math.max(0, 100 - (amountDiff / match.invoice.amount * 100));
+
+                                        const invoiceDate = new Date(match.invoice.date);
+                                        const transactionDate = new Date(match.transaction.date);
+                                        const daysDiff = Math.abs(Math.floor((invoiceDate - transactionDate) / (1000 * 60 * 60 * 24)));
+                                        const dateScore = Math.max(0, 100 - (daysDiff * 5));
+
+                                        const vendorName = (match.invoice.vendor_name || '').toLowerCase();
+                                        const entityName = (match.transaction.classified_entity || '').toLowerCase();
+                                        const entityScore = vendorName.includes(entityName.split(' ')[0]) || entityName.includes(vendorName.split(' ')[0]) ? 85 : 30;
+
+                                        const overallScore = match.score * 100;
+
+                                        return `
+                                            <div class="score-item">
+                                                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 0.5rem;">
+                                                    <span style="font-size: 0.8rem; color: #374151; font-weight: 600;">💵 Amount Match</span>
+                                                    <span style="font-size: 0.8rem; color: #3b82f6; font-weight: 700;">${amountScore.toFixed(0)}%</span>
+                                                </div>
+                                                <div style="width: 100%; background: #f1f5f9; border-radius: 4px; height: 6px;">
+                                                    <div style="background: ${amountScore >= 90 ? '#10b981' : amountScore >= 70 ? '#f59e0b' : '#ef4444'}; height: 100%; border-radius: 4px; width: ${amountScore}%; transition: width 0.3s ease;"></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="score-item">
+                                                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 0.5rem;">
+                                                    <span style="font-size: 0.8rem; color: #374151; font-weight: 600;">📅 Date Match</span>
+                                                    <span style="font-size: 0.8rem; color: #3b82f6; font-weight: 700;">${dateScore.toFixed(0)}%</span>
+                                                </div>
+                                                <div style="width: 100%; background: #f1f5f9; border-radius: 4px; height: 6px;">
+                                                    <div style="background: ${dateScore >= 90 ? '#10b981' : dateScore >= 70 ? '#f59e0b' : '#ef4444'}; height: 100%; border-radius: 4px; width: ${dateScore}%; transition: width 0.3s ease;"></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="score-item">
+                                                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 0.5rem;">
+                                                    <span style="font-size: 0.8rem; color: #374151; font-weight: 600;">🏢 Entity Match</span>
+                                                    <span style="font-size: 0.8rem; color: #3b82f6; font-weight: 700;">${entityScore}%</span>
+                                                </div>
+                                                <div style="width: 100%; background: #f1f5f9; border-radius: 4px; height: 6px;">
+                                                    <div style="background: ${entityScore >= 80 ? '#10b981' : entityScore >= 50 ? '#f59e0b' : '#ef4444'}; height: 100%; border-radius: 4px; width: ${entityScore}%; transition: width 0.3s ease;"></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="score-item">
+                                                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 0.5rem;">
+                                                    <span style="font-size: 0.8rem; color: #374151; font-weight: 600;">🎯 Overall Score</span>
+                                                    <span style="font-size: 0.8rem; color: #6366f1; font-weight: 700;">${overallScore.toFixed(0)}%</span>
+                                                </div>
+                                                <div style="width: 100%; background: #f1f5f9; border-radius: 4px; height: 8px;">
+                                                    <div style="background: linear-gradient(90deg, #6366f1, #3b82f6); height: 100%; border-radius: 4px; width: ${overallScore}%; transition: width 0.3s ease; box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);"></div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="explanation">
+                            <strong>Why this matches:</strong> ${match.explanation}
+                        </div>
+
+                        <div class="match-actions">
+                            <button class="action-btn btn-confirm" onclick="confirmMatch(${match.id})">
+                                ✅ Confirm Match
+                            </button>
+                            <button class="action-btn btn-reject" onclick="rejectMatch(${match.id})">
+                                ❌ Reject Match
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = matchesHtml;
+        }
+
+        // Render pagination controls for pending matches
+        function renderPendingPagination() {
+            // First check if there's a pagination container in pending matches section
+            let paginationContainer = document.getElementById('pending-pagination');
+
+            // If it doesn't exist, create it
+            if (!paginationContainer) {
+                const pendingSection = document.getElementById('pending-matches').parentElement;
+                paginationContainer = document.createElement('div');
+                paginationContainer.id = 'pending-pagination';
+                pendingSection.appendChild(paginationContainer);
+            }
+
+            if (totalPendingPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let paginationHtml = `
+                <div class="pagination-controls">
+                    <div class="pagination-info">
+                        Showing ${(currentPendingPage - 1) * pendingPerPage + 1}-${Math.min(currentPendingPage * pendingPerPage, totalPendingMatches)} of ${totalPendingMatches} pending matches
+                    </div>
+                    <div class="pagination-buttons">
+            `;
+
+            // Previous button
+            if (currentPendingPage > 1) {
+                paginationHtml += `
+                    <button class="pagination-btn" onclick="loadPendingMatches(${currentPendingPage - 1})">
+                        ← Previous
+                    </button>
+                `;
+            }
+
+            // Page numbers
+            const startPage = Math.max(1, currentPendingPage - 2);
+            const endPage = Math.min(totalPendingPages, currentPendingPage + 2);
+
+            if (startPage > 1) {
+                paginationHtml += `<button class="pagination-btn" onclick="loadPendingMatches(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHtml += `<span class="pagination-ellipsis">...</span>`;
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const activeClass = i === currentPendingPage ? 'active' : '';
+                paginationHtml += `
+                    <button class="pagination-btn ${activeClass}" onclick="loadPendingMatches(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            if (endPage < totalPendingPages) {
+                if (endPage < totalPendingPages - 1) {
+                    paginationHtml += `<span class="pagination-ellipsis">...</span>`;
+                }
+                paginationHtml += `<button class="pagination-btn" onclick="loadPendingMatches(${totalPendingPages})">${totalPendingPages}</button>`;
+            }
+
+            // Next button
+            if (currentPendingPage < totalPendingPages) {
+                paginationHtml += `
+                    <button class="pagination-btn" onclick="loadPendingMatches(${currentPendingPage + 1})">
+                        Next →
+                    </button>
+                `;
+            }
+
+            paginationHtml += `
+                    </div>
+                    <div class="per-page-controls">
+                        <label for="pending-per-page-select">Per page:</label>
+                        <select id="pending-per-page-select" onchange="changePendingPerPage(this.value)" style="margin-left: 0.5rem; padding: 0.25rem;">
+                            <option value="10" ${pendingPerPage === 10 ? 'selected' : ''}>10</option>
+                            <option value="25" ${pendingPerPage === 25 ? 'selected' : ''}>25</option>
+                            <option value="50" ${pendingPerPage === 50 ? 'selected' : ''}>50</option>
+                            <option value="100" ${pendingPerPage === 100 ? 'selected' : ''}>100</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            paginationContainer.innerHTML = paginationHtml;
+        }
+
+        // Change items per page for pending matches
+        function changePendingPerPage(newPerPage) {
+            pendingPerPage = parseInt(newPerPage);
+            loadPendingMatches(1); // Reset to page 1 when changing per page
+        }
+
+        // Filter matches by confidence
+        function filterMatches(filter) {
+            currentFilter = filter;
+
+            // Update tab styles
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Re-render with filter
+            renderPendingMatches(currentMatches);
+        }
+
+        // Confirm a match
+        async function confirmMatch(matchId) {
+            try {
+                const response = await fetch('/api/revenue/confirm-match', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        match_id: matchId,
+                        user_id: 'Dashboard User'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Match confirmed successfully!', 'success');
+                    await refreshData();
+                } else {
+                    showNotification('Failed to confirm match: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error confirming match:', error);
+                showNotification('Error confirming match', 'error');
+            }
+        }
+
+        // Reject a match
+        async function rejectMatch(matchId) {
+            const reason = prompt('Reason for rejection (optional):');
+
+            try {
+                const response = await fetch('/api/revenue/reject-match', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        match_id: matchId,
+                        user_id: 'Dashboard User',
+                        reason: reason || ''
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Match rejected successfully!', 'success');
+                    await refreshData();
+                } else {
+                    showNotification('Failed to reject match: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error rejecting match:', error);
+                showNotification('Error rejecting match', 'error');
+            }
+        }
+
+        // Load recent matches
+        async function loadRecentMatches() {
+            try {
+                const response = await fetch('/api/revenue/matched-pairs?per_page=5');
+                const data = await response.json();
+
+                if (data.success) {
+                    renderRecentMatches(data.pairs);
+                }
+            } catch (error) {
+                console.error('Error loading recent matches:', error);
+            }
+        }
+
+        // Render recent matches
+        function renderRecentMatches(pairs) {
+            const container = document.getElementById('confirmed-matches');
+
+            if (!pairs || pairs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No confirmed matches yet. Matches will appear here once approved.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const pairsHtml = pairs.map(pair => `
+                <div class="match-item">
+                    <div class="match-header">
+                        <div style="flex: 1;">
+                            <strong>Invoice ${pair.invoice.number}</strong>
+                            <span style="margin-left: 1rem; color: #6b7280;">
+                                Matched ${new Date(pair.matched_at).toLocaleDateString()}
+                            </span>
+                        </div>
+                        <div class="badge success">${pair.match_type || 'CONFIRMED'}</div>
+                    </div>
+
+                    <div class="match-details">
+                        <div class="invoice-details">
+                            <h4>📄 Invoice</h4>
+                            <div class="detail-row">
+                                <span class="detail-label">Vendor:</span>
+                                <span class="detail-value">${pair.invoice.vendor_name}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Amount:</span>
+                                <span class="detail-value">${pair.invoice.currency} ${pair.invoice.amount.toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <div class="transaction-details">
+                            <h4>💰 Transaction</h4>
+                            <div class="detail-row">
+                                <span class="detail-label">Description:</span>
+                                <span class="detail-value" title="${pair.transaction.description}">
+                                    ${pair.transaction.description.length > 60 ?
+                                        pair.transaction.description.substring(0, 60) + '...' :
+                                        pair.transaction.description}
+                                </span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Amount:</span>
+                                <span class="detail-value">$${pair.transaction.amount.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="match-actions">
+                        <button class="action-btn btn-secondary" onclick="unmatchInvoice('${pair.invoice_id}')">
+                            🔗 Unmatch
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = pairsHtml;
+        }
+
+        // Unmatch an invoice
+        async function unmatchInvoice(invoiceId) {
+            if (!confirm('Are you sure you want to unmatch this invoice?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/revenue/unmatch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        invoice_id: invoiceId,
+                        user_id: 'Dashboard User'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Invoice unmatched successfully!', 'success');
+                    await refreshData();
+                } else {
+                    showNotification('Failed to unmatch: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error unmatching:', error);
+                showNotification('Error unmatching invoice', 'error');
+            }
+        }
+
+        // Show matched pairs in modal (placeholder for future)
+        function showMatchedPairs() {
+            window.open('/invoices', '_blank');
+        }
+
+        // Refresh all data
+        async function refreshData() {
+            await Promise.all([
+                loadStats(),
+                loadUnlinkedInvoices(),
+                loadPendingMatches(),
+                loadRecentMatches()
+            ]);
+
+            showNotification('Data refreshed successfully', 'success');
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Toggle advanced options
+        function toggleAdvancedOptions() {
+            const advancedOptions = document.getElementById('advanced-options');
+            const isVisible = advancedOptions.style.display !== 'none';
+
+            if (isVisible) {
+                advancedOptions.style.display = 'none';
+            } else {
+                advancedOptions.style.display = 'block';
+            }
+        }
+
+        // Enhanced Context Actions Functions
+        async function viewTransactionChain(transactionId) {
+            try {
+                showNotification('Analisando cadeia de transações...', 'info');
+
+                // Call new transaction chain API
+                const response = await fetch(`/api/transactions/${transactionId}/chains`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const chainData = await response.json();
+                showTransactionChainModal(transactionId, chainData);
+
+            } catch (error) {
+                console.error('Error loading transaction chain:', error);
+                showNotification('Erro ao carregar cadeia de transações. Abrindo dashboard...', 'warning');
+                // Fallback to old behavior
+                window.open(`/dashboard?search=${transactionId}`, '_blank');
+            }
+        }
+
+        // Transaction Chain Modal
+        async function showTransactionChainModal(transactionId, chainData) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+
+            const baseTransaction = chainData.base_transaction;
+            const chains = chainData.chains || {};
+            const summary = chainData.summary || {};
+
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem;">
+                        <h3 style="margin: 0; color: #1e293b; display: flex; align-items: center; gap: 0.5rem;">
+                            ⛓️ Transaction Chain Analysis
+                        </h3>
+                        <button onclick="this.closest('.modal').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">×</button>
+                    </div>
+
+                    <!-- Base Transaction Info -->
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                        <h4 style="margin: 0 0 0.75rem 0; color: #334155; display: flex; align-items: center; gap: 0.5rem;">
+                            🎯 Base Transaction
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+                            <div><strong>Date:</strong> ${baseTransaction?.date || 'N/A'}</div>
+                            <div><strong>Amount:</strong> $${baseTransaction?.amount ? parseFloat(baseTransaction.amount).toLocaleString() : 'N/A'}</div>
+                            <div><strong>Entity:</strong> ${baseTransaction?.classified_entity || 'N/A'}</div>
+                            <div><strong>Category:</strong> ${baseTransaction?.accounting_category || 'N/A'}</div>
+                        </div>
+                        <div style="margin-top: 0.75rem;">
+                            <strong>Description:</strong> ${baseTransaction?.description || 'N/A'}
+                        </div>
+                    </div>
+
+                    <!-- Summary Statistics -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 6px; padding: 1rem; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #166534;">${summary.total_related_transactions || 0}</div>
+                            <div style="color: #166534; font-size: 0.875rem;">Related Transactions</div>
+                        </div>
+                        <div style="background: #dbeafe; border: 1px solid #bfdbfe; border-radius: 6px; padding: 1rem; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #1d4ed8;">${summary.total_chain_types || 0}</div>
+                            <div style="color: #1d4ed8; font-size: 0.875rem;">Pattern Types Found</div>
+                        </div>
+                        <div style="background: #fef3c7; border: 1px solid #fed7aa; border-radius: 6px; padding: 1rem; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #d97706;">$${summary.total_amount ? parseFloat(summary.total_amount).toLocaleString() : '0'}</div>
+                            <div style="color: #d97706; font-size: 0.875rem;">Total Chain Value</div>
+                        </div>
+                        <div style="background: #f3e8ff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 1rem; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #7c3aed;">${summary.highest_confidence ? (summary.highest_confidence * 100).toFixed(0) + '%' : 'N/A'}</div>
+                            <div style="color: #7c3aed; font-size: 0.875rem;">Highest Confidence</div>
+                        </div>
+                    </div>
+
+                    <!-- Chain Results -->
+                    <div style="margin-bottom: 1.5rem;">
+                        ${Object.keys(chains).length > 0 ? Object.keys(chains).map(chainType => {
+                            const chainTransactions = chains[chainType];
+                            if (!chainTransactions || chainTransactions.length === 0) return '';
+
+                            const chainInfo = getChainTypeInfo(chainType);
+
+                            return `
+                                <div style="background: white; border: 2px solid ${chainInfo.color}; border-radius: 8px; margin-bottom: 1rem; overflow: hidden;">
+                                    <div style="background: ${chainInfo.background}; padding: 1rem; border-bottom: 1px solid ${chainInfo.color};">
+                                        <h4 style="margin: 0; color: ${chainInfo.textColor}; display: flex; align-items: center; gap: 0.5rem;">
+                                            ${chainInfo.icon} ${chainInfo.title} (${chainTransactions.length} transactions)
+                                        </h4>
+                                        <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: ${chainInfo.textColor}; opacity: 0.8;">
+                                            ${chainInfo.description}
+                                        </p>
+                                    </div>
+                                    <div style="padding: 1rem;">
+                                        <div style="max-height: 400px; overflow-y: auto;">
+                                            ${chainTransactions.map(transaction => `
+                                                <div style="border: 1px solid #e2e8f0; border-radius: 4px; padding: 0.75rem; margin-bottom: 0.75rem; background: #fafafa;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                                        <div style="flex: 1;">
+                                                            <strong>${transaction.description}</strong>
+                                                            <div style="font-size: 0.875rem; color: #64748b; margin-top: 0.25rem;">
+                                                                ${transaction.date} • ${transaction.classified_entity || 'Unknown Entity'}
+                                                            </div>
+                                                        </div>
+                                                        <div style="text-align: right; margin-left: 1rem;">
+                                                            <div style="font-weight: bold; color: ${parseFloat(transaction.amount) >= 0 ? '#059669' : '#dc2626'};">
+                                                                $${parseFloat(transaction.amount).toLocaleString()}
+                                                            </div>
+                                                            <div style="font-size: 0.75rem; color: #64748b;">
+                                                                ${transaction.confidence ? (transaction.confidence * 100).toFixed(0) + '% confidence' : 'N/A'}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    ${transaction.reasoning ? `
+                                                        <div style="background: #f1f5f9; border-radius: 4px; padding: 0.5rem; font-size: 0.875rem; color: #475569; margin-top: 0.5rem;">
+                                                            <strong>Pattern:</strong> ${transaction.reasoning}
+                                                        </div>
+                                                    ` : ''}
+                                                    <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                                                        <button onclick="window.open('/dashboard?search=${transaction.transaction_id}', '_blank')" style="
+                                                            padding: 0.375rem 0.75rem; background: #3b82f6; color: white;
+                                                            border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;
+                                                        ">🔍 View Details</button>
+                                                        ${transaction.transaction_id !== transactionId ? `
+                                                            <button onclick="viewTransactionChain('${transaction.transaction_id}')" style="
+                                                                padding: 0.375rem 0.75rem; background: #10b981; color: white;
+                                                                border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;
+                                                            ">⛓️ Analyze Chain</button>
+                                                        ` : `
+                                                            <span style="padding: 0.375rem 0.75rem; background: #e2e8f0; color: #64748b; border-radius: 4px; font-size: 0.75rem;">Current Transaction</span>
+                                                        `}
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') : `
+                            <div style="text-align: center; padding: 2rem; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px;">
+                                <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">🔍</div>
+                                <h3 style="margin: 0 0 0.5rem 0; color: #64748b;">No Transaction Chains Found</h3>
+                                <p style="margin: 0; color: #64748b;">This transaction appears to be standalone with no related patterns detected.</p>
+                            </div>
+                        `}
+                    </div>
+
+                    <!-- Actions -->
+                    <div style="text-align: center; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                        <button onclick="window.open('/dashboard?search=${transactionId}', '_blank')" style="
+                            margin-right: 0.75rem; padding: 0.75rem 1.5rem; background: #3b82f6; color: white;
+                            border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem;
+                        ">🔍 View in Dashboard</button>
+                        <button onclick="this.closest('.modal').remove()" style="
+                            padding: 0.75rem 1.5rem; background: #6b7280; color: white;
+                            border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem;
+                        ">Close</button>
+                    </div>
+                </div>
+            `;
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+
+            document.body.appendChild(modal);
+        }
+
+        function getChainTypeInfo(chainType) {
+            const chainTypes = {
+                'crypto_sequence': {
+                    icon: '₿',
+                    title: 'Cryptocurrency Sequence',
+                    description: 'Related cryptocurrency transactions with similar patterns or amounts.',
+                    color: '#f59e0b',
+                    background: '#fef3c7',
+                    textColor: '#92400e'
+                },
+                'vendor_recurring': {
+                    icon: '🏢',
+                    title: 'Vendor Recurring Payments',
+                    description: 'Regular payments to the same vendor or entity.',
+                    color: '#10b981',
+                    background: '#d1fae5',
+                    textColor: '#065f46'
+                },
+                'entity_related': {
+                    icon: '🏬',
+                    title: 'Entity Related Transactions',
+                    description: 'Transactions from the same business entity or classification.',
+                    color: '#3b82f6',
+                    background: '#dbeafe',
+                    textColor: '#1e40af'
+                },
+                'amount_correlation': {
+                    icon: '💰',
+                    title: 'Amount Correlation',
+                    description: 'Transactions with similar amounts or mathematical relationships.',
+                    color: '#8b5cf6',
+                    background: '#ede9fe',
+                    textColor: '#6d28d9'
+                },
+                'invoice_sequence': {
+                    icon: '📄',
+                    title: 'Invoice Sequence',
+                    description: 'Related invoice transactions or structured payment sequences.',
+                    color: '#ef4444',
+                    background: '#fee2e2',
+                    textColor: '#dc2626'
+                }
+            };
+
+            return chainTypes[chainType] || {
+                icon: '🔗',
+                title: 'Related Transactions',
+                description: 'Transactions identified as related to the base transaction.',
+                color: '#64748b',
+                background: '#f1f5f9',
+                textColor: '#334155'
+            };
+        }
+
+        // Enhanced Similar Matches - intelligent matching based on multiple criteria
+        function showSimilarMatches(vendorName, currentAmount, currentDate, currentMatchId) {
+            showSimilarMatchesModal(vendorName, currentAmount, currentDate, currentMatchId);
+        }
+
+        // Enhanced Vendor History with modal
+        function showVendorHistory(vendorName) {
+            showVendorHistoryModal(vendorName);
+        }
+
+        // Smart Similar Matches Modal
+        async function showSimilarMatchesModal(vendorName, amount = null, date = null, currentMatchId = null) {
+            try {
+                showNotification('Buscando matches similares...', 'info');
+
+                // Build intelligent search criteria
+                const searchCriteria = {};
+                if (vendorName && vendorName !== 'undefined') searchCriteria.vendor = vendorName;
+                if (amount) {
+                    // Search for similar amounts (±20% range)
+                    const amountFloat = parseFloat(amount);
+                    if (!isNaN(amountFloat)) {
+                        searchCriteria.min_amount = amountFloat * 0.8;
+                        searchCriteria.max_amount = amountFloat * 1.2;
+                    }
+                }
+
+                // Fetch similar matches
+                const queryParams = new URLSearchParams(searchCriteria).toString();
+                const response = await fetch(`/api/revenue/pending-matches?${queryParams}&per_page=10`);
+                const data = await response.json();
+
+                if (!data.success || !data.matches.length) {
+                    showNotification('Nenhum match similar encontrado', 'warning');
+                    return;
+                }
+
+                // Filter out current match
+                const similarMatches = data.matches.filter(m => m.id !== currentMatchId);
+
+                if (!similarMatches.length) {
+                    showNotification('Nenhum outro match similar encontrado', 'info');
+                    return;
+                }
+
+                // Create enhanced modal
+                const modal = createSimilarMatchesModal(similarMatches, vendorName, amount);
+                document.body.appendChild(modal);
+
+            } catch (error) {
+                console.error('Error fetching similar matches:', error);
+                showNotification('Erro ao buscar matches similares', 'error');
+            }
+        }
+
+        // Create Similar Matches Modal
+        function createSimilarMatchesModal(matches, vendorName, targetAmount) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.7); z-index: 10000; display: flex;
+                align-items: center; justify-content: center; padding: 2rem;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: white; max-width: 90vw; max-height: 85vh; overflow-y: auto;
+                    border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+                ">
+                    <div style="
+                        padding: 1.5rem 2rem; border-bottom: 2px solid #e2e8f0;
+                        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; color: #1f2937; display: flex; align-items: center; gap: 0.75rem;">
+                                🔍 <span style="font-size: 1.25rem;">Matches Similares</span>
+                            </h3>
+                            <button onclick="this.closest('.modal').remove()" style="
+                                background: #ef4444; color: white; border: none; width: 32px; height: 32px;
+                                border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex;
+                                align-items: center; justify-content: center;
+                            ">×</button>
+                        </div>
+                        <p style="margin: 0.5rem 0 0 0; color: #64748b; font-size: 0.9rem;">
+                            🎯 Vendor: <strong>${vendorName}</strong> |
+                            💰 Valor base: <strong>$${parseFloat(targetAmount).toLocaleString()}</strong> |
+                            📊 ${matches.length} matches encontrados
+                        </p>
+                    </div>
+
+                    <div style="padding: 1.5rem;">
+                        <div style="display: grid; gap: 1rem;">
+                            ${matches.map((match, idx) => `
+                                <div style="
+                                    border: 2px solid #e2e8f0; border-radius: 8px; padding: 1rem;
+                                    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+                                    transition: all 0.2s ease; cursor: pointer;
+                                " onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#e2e8f0'">
+
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                                        <div>
+                                            <h4 style="margin: 0; color: #1f2937; font-size: 1rem;">
+                                                Match #${idx + 1} - Score: ${(match.score * 100).toFixed(1)}%
+                                            </h4>
+                                            <div style="margin: 0.25rem 0; color: #6b7280; font-size: 0.85rem;">
+                                                ${match.confidence_level} confidence
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="color: #059669; font-weight: 600; font-size: 1.1rem;">
+                                                $${parseFloat(match.invoice.amount).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+                                        <div>
+                                            <strong style="color: #3b82f6;">📄 Invoice:</strong><br>
+                                            <span style="font-size: 0.9rem;">${match.invoice.number || 'N/A'}</span><br>
+                                            <span style="color: #6b7280; font-size: 0.85rem;">
+                                                ${new Date(match.invoice.date).toLocaleDateString('pt-BR')}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <strong style="color: #10b981;">💰 Transaction:</strong><br>
+                                            <span style="font-size: 0.9rem;">$${parseFloat(match.transaction.amount).toLocaleString()}</span><br>
+                                            <span style="color: #6b7280; font-size: 0.85rem;">
+                                                ${match.transaction.classified_entity}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.75rem;">
+                                        <div style="font-size: 0.85rem; color: #475569;">
+                                            <strong>Explicação:</strong> ${match.explanation || 'N/A'}
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                        <button onclick="window.open('/revenue?highlight=${match.id}', '_blank')" style="
+                                            padding: 0.375rem 0.75rem; background: #3b82f6; color: white;
+                                            border: none; border-radius: 4px; font-size: 0.8rem; cursor: pointer;
+                                        ">🔗 Ver Match</button>
+                                        <button onclick="viewInvoiceDetailsModal('${match.invoice_id}')" style="
+                                            padding: 0.375rem 0.75rem; background: #8b5cf6; color: white;
+                                            border: none; border-radius: 4px; font-size: 0.8rem; cursor: pointer;
+                                        ">📄 Ver Invoice</button>
+                                        <button onclick="window.open('/dashboard?search=${match.transaction_id}', '_blank')" style="
+                                            padding: 0.375rem 0.75rem; background: #10b981; color: white;
+                                            border: none; border-radius: 4px; font-size: 0.8rem; cursor: pointer;
+                                        ">⛓️ Ver Transação</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div style="margin-top: 1.5rem; text-align: center;">
+                            <button onclick="window.open('/revenue?vendor=${encodeURIComponent(vendorName)}', '_blank')" style="
+                                padding: 0.75rem 1.5rem; background: #f59e0b; color: white;
+                                border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer;
+                            ">🔍 Ver Todos os Matches do Vendor</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.className = 'modal';
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+
+            return modal;
+        }
+
+        // Enhanced Vendor History Modal
+        async function showVendorHistoryModal(vendorName) {
+            if (!vendorName || vendorName === 'undefined') {
+                showNotification('Vendor name not available', 'warning');
+                return;
+            }
+
+            try {
+                showNotification('Carregando histórico do vendor...', 'info');
+
+                // Fetch vendor transactions and invoices
+                const [invoicesResponse, transactionsResponse] = await Promise.all([
+                    fetch(`/api/invoices?vendor=${encodeURIComponent(vendorName)}&per_page=50`),
+                    fetch(`/api/transactions?search=${encodeURIComponent(vendorName)}&per_page=20`)
+                ]);
+
+                const invoicesData = await invoicesResponse.json();
+                const transactionsData = await transactionsResponse.json();
+
+                const modal = createVendorHistoryModal(vendorName, invoicesData, transactionsData);
+                document.body.appendChild(modal);
+
+            } catch (error) {
+                console.error('Error loading vendor history:', error);
+                showNotification('Erro ao carregar histórico do vendor', 'error');
+            }
+        }
+
+        // Create Vendor History Modal
+        function createVendorHistoryModal(vendorName, invoicesData, transactionsData) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.7); z-index: 10000; display: flex;
+                align-items: center; justify-content: center; padding: 2rem;
+            `;
+
+            const invoices = invoicesData.invoices || [];
+            const transactions = transactionsData.transactions || [];
+            const totalInvoiceAmount = invoices.reduce((sum, inv) => sum + parseFloat(inv.amount || 0), 0);
+            const totalTransactionAmount = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+
+            modal.innerHTML = `
+                <div style="
+                    background: white; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+                    border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+                ">
+                    <div style="
+                        padding: 1.5rem 2rem; border-bottom: 2px solid #e2e8f0;
+                        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; color: #1f2937; display: flex; align-items: center; gap: 0.75rem;">
+                                🏢 <span>Histórico: ${vendorName}</span>
+                            </h3>
+                            <button onclick="this.closest('.modal').remove()" style="
+                                background: #ef4444; color: white; border: none; width: 32px; height: 32px;
+                                border-radius: 50%; font-size: 1.2rem; cursor: pointer;
+                            ">×</button>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <div style="text-align: center; padding: 0.75rem; background: #dbeafe; border-radius: 6px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #1e40af;">${invoices.length}</div>
+                                <div style="color: #64748b; font-size: 0.8rem;">Invoices</div>
+                            </div>
+                            <div style="text-align: center; padding: 0.75rem; background: #d1fae5; border-radius: 6px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #047857;">${transactions.length}</div>
+                                <div style="color: #64748b; font-size: 0.8rem;">Transações</div>
+                            </div>
+                            <div style="text-align: center; padding: 0.75rem; background: #fef3c7; border-radius: 6px;">
+                                <div style="font-size: 1.2rem; font-weight: bold; color: #92400e;">$${totalInvoiceAmount.toLocaleString()}</div>
+                                <div style="color: #64748b; font-size: 0.8rem;">Total Invoices</div>
+                            </div>
+                            <div style="text-align: center; padding: 0.75rem; background: #e0e7ff; border-radius: 6px;">
+                                <div style="font-size: 1.2rem; font-weight: bold; color: #5b21b6;">$${totalTransactionAmount.toLocaleString()}</div>
+                                <div style="color: #64748b; font-size: 0.8rem;">Total Transações</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="padding: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+
+                            <!-- Invoices Section -->
+                            <div>
+                                <h4 style="margin: 0 0 1rem 0; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                                    📄 Recent Invoices (${invoices.length})
+                                </h4>
+                                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+                                    ${invoices.slice(0, 10).map(invoice => `
+                                        <div style="
+                                            padding: 0.75rem; border-bottom: 1px solid #f1f5f9;
+                                            hover:background-color: #f8fafc;
+                                        ">
+                                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                                <div>
+                                                    <div style="font-weight: 600; color: #1f2937;">
+                                                        ${invoice.number || 'N/A'}
+                                                    </div>
+                                                    <div style="font-size: 0.85rem; color: #6b7280;">
+                                                        ${new Date(invoice.date).toLocaleDateString('pt-BR')}
+                                                    </div>
+                                                </div>
+                                                <div style="text-align: right;">
+                                                    <div style="font-weight: 600; color: #059669;">
+                                                        $${parseFloat(invoice.amount || 0).toLocaleString()}
+                                                    </div>
+                                                    <div style="font-size: 0.8rem; color: ${invoice.status === 'matched' ? '#059669' : '#dc2626'};">
+                                                        ${invoice.status || 'pending'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                    ${invoices.length === 0 ? '<div style="padding: 2rem; text-align: center; color: #9ca3af;">Nenhum invoice encontrado</div>' : ''}
+                                </div>
+                            </div>
+
+                            <!-- Transactions Section -->
+                            <div>
+                                <h4 style="margin: 0 0 1rem 0; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                                    💰 Recent Transactions (${transactions.length})
+                                </h4>
+                                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+                                    ${transactions.slice(0, 10).map(tx => `
+                                        <div style="
+                                            padding: 0.75rem; border-bottom: 1px solid #f1f5f9;
+                                            hover:background-color: #f8fafc; cursor: pointer;
+                                        " onclick="window.open('/dashboard?search=${tx.transaction_id}', '_blank')">
+                                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                                <div style="flex: 1; margin-right: 1rem;">
+                                                    <div style="font-size: 0.85rem; color: #1f2937; margin-bottom: 0.25rem;">
+                                                        ${(tx.description || 'N/A').substring(0, 60)}${tx.description && tx.description.length > 60 ? '...' : ''}
+                                                    </div>
+                                                    <div style="font-size: 0.75rem; color: #6b7280;">
+                                                        ${tx.classified_entity || 'N/A'} • ${new Date(tx.date).toLocaleDateString('pt-BR')}
+                                                    </div>
+                                                </div>
+                                                <div style="text-align: right;">
+                                                    <div style="font-weight: 600; color: ${parseFloat(tx.amount) >= 0 ? '#059669' : '#dc2626'};">
+                                                        $${Math.abs(parseFloat(tx.amount || 0)).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                    ${transactions.length === 0 ? '<div style="padding: 2rem; text-align: center; color: #9ca3af;">Nenhuma transação encontrada</div>' : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; text-align: center; display: flex; gap: 1rem; justify-content: center;">
+                            <button onclick="window.open('/invoices?search=${encodeURIComponent(vendorName)}', '_blank')" style="
+                                padding: 0.75rem 1.5rem; background: #3b82f6; color: white;
+                                border: none; border-radius: 6px; cursor: pointer;
+                            ">📄 Ver Todos os Invoices</button>
+                            <button onclick="window.open('/dashboard?search=${encodeURIComponent(vendorName)}', '_blank')" style="
+                                padding: 0.75rem 1.5rem; background: #10b981; color: white;
+                                border: none; border-radius: 6px; cursor: pointer;
+                            ">💰 Ver Todas as Transações</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.className = 'modal';
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+
+            return modal;
+        }
+
+        // Enhanced invoice details viewer with modal
+        async function viewInvoiceDetailsModal(invoiceId) {
+            if (!invoiceId || invoiceId === 'undefined') {
+                showNotification('Invoice ID not available', 'warning');
+                return;
+            }
+
+            try {
+                showNotification('Carregando detalhes do invoice...', 'info');
+
+                // Fetch invoice details
+                const response = await fetch(`/api/invoices/${invoiceId}`);
+                const invoice = await response.json();
+
+                if (!response.ok || !invoice || !invoice.id) {
+                    showNotification('Invoice não encontrado', 'error');
+                    return;
+                }
+                const modal = createInvoiceDetailsModal(invoice);
+                document.body.appendChild(modal);
+
+            } catch (error) {
+                console.error('Error loading invoice details:', error);
+                showNotification('Erro ao carregar detalhes do invoice', 'error');
+            }
+        }
+
+        // Create Invoice Details Modal
+        function createInvoiceDetailsModal(invoice) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.7); z-index: 10000; display: flex;
+                align-items: center; justify-content: center; padding: 2rem;
+            `;
+
+            // Calculate status color
+            const getStatusColor = (status) => {
+                switch(status?.toLowerCase()) {
+                    case 'matched': return '#10b981';
+                    case 'pending': return '#f59e0b';
+                    case 'paid': return '#059669';
+                    default: return '#6b7280';
+                }
+            };
+
+            // Format line items if available
+            const lineItemsHtml = invoice.line_items && invoice.line_items.length > 0 ? `
+                <div style="margin-top: 1.5rem;">
+                    <h5 style="margin: 0 0 1rem 0; color: #374151; display: flex; align-items: center; gap: 0.5rem;">
+                        📋 Itens do Invoice
+                    </h5>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+                        ${invoice.line_items.map((item, idx) => `
+                            <div style="
+                                padding: 0.75rem; border-bottom: 1px solid #f1f5f9;
+                                display: flex; justify-content: space-between; align-items: center;
+                            ">
+                                <div>
+                                    <div style="font-weight: 500; color: #1f2937;">${item.description || `Item ${idx + 1}`}</div>
+                                    ${item.quantity ? `<div style="font-size: 0.8rem; color: #6b7280;">Qty: ${item.quantity}</div>` : ''}
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: #059669;">
+                                    $${parseFloat(item.amount || 0).toLocaleString()}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            modal.innerHTML = `
+                <div style="
+                    background: white; max-width: 800px; max-height: 90vh; overflow-y: auto;
+                    border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+                ">
+                    <div style="
+                        padding: 1.5rem 2rem; border-bottom: 2px solid #e2e8f0;
+                        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; color: #1f2937; display: flex; align-items: center; gap: 0.75rem;">
+                                📄 <span>Invoice Details</span>
+                            </h3>
+                            <button onclick="this.closest('.modal').remove()" style="
+                                background: #ef4444; color: white; border: none; width: 32px; height: 32px;
+                                border-radius: 50%; font-size: 1.2rem; cursor: pointer;
+                            ">×</button>
+                        </div>
+                        <div style="margin-top: 0.5rem; color: #64748b; display: flex; align-items: center; gap: 1rem;">
+                            <span style="
+                                padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+                                background: ${getStatusColor(invoice.status)}; color: white;
+                            ">${invoice.status || 'pending'}</span>
+                            <span>ID: ${invoice.id}</span>
+                        </div>
+                    </div>
+
+                    <div style="padding: 2rem;">
+                        <!-- Main Invoice Information -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                            <div>
+                                <h4 style="margin: 0 0 1rem 0; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                                    🏢 Vendor Information
+                                </h4>
+                                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="margin-bottom: 0.75rem;">
+                                        <div style="font-size: 0.8rem; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 0.25rem;">Nome</div>
+                                        <div style="font-weight: 600; color: #1f2937; font-size: 1.1rem;">${invoice.vendor_name || 'N/A'}</div>
+                                    </div>
+                                    ${invoice.vendor_email ? `
+                                        <div style="margin-bottom: 0.75rem;">
+                                            <div style="font-size: 0.8rem; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 0.25rem;">Email</div>
+                                            <div style="color: #3b82f6;">${invoice.vendor_email}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${invoice.vendor_address ? `
+                                        <div>
+                                            <div style="font-size: 0.8rem; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 0.25rem;">Endereço</div>
+                                            <div style="color: #4b5563; font-size: 0.9rem;">${invoice.vendor_address}</div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 style="margin: 0 0 1rem 0; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                                    💰 Financial Information
+                                </h4>
+                                <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                        <span style="font-size: 0.8rem; color: #166534; text-transform: uppercase; font-weight: 600;">Valor Total</span>
+                                        <span style="font-size: 1.5rem; font-weight: bold; color: #059669;">
+                                            $${parseFloat(invoice.total_amount || 0).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <span style="color: #6b7280;">Moeda:</span>
+                                        <span style="font-weight: 600;">${invoice.currency || 'USD'}</span>
+                                    </div>
+                                    ${invoice.tax_amount ? `
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                            <span style="color: #6b7280;">Taxa:</span>
+                                            <span style="color: #059669;">$${parseFloat(invoice.tax_amount || 0).toLocaleString()}</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Details -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                            <div>
+                                <h4 style="margin: 0 0 1rem 0; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                                    📋 Invoice Details
+                                </h4>
+                                <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: grid; gap: 0.75rem;">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="color: #6b7280;">Número:</span>
+                                            <span style="font-weight: 600; font-family: monospace;">${invoice.invoice_number || 'N/A'}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="color: #6b7280;">Data:</span>
+                                            <span style="font-weight: 600;">${new Date(invoice.date).toLocaleDateString('pt-BR')}</span>
+                                        </div>
+                                        ${invoice.due_date ? `
+                                            <div style="display: flex; justify-content: space-between;">
+                                                <span style="color: #6b7280;">Vencimento:</span>
+                                                <span style="font-weight: 600; color: #dc2626;">${new Date(invoice.due_date).toLocaleDateString('pt-BR')}</span>
+                                            </div>
+                                        ` : ''}
+                                        ${invoice.payment_terms ? `
+                                            <div style="display: flex; justify-content: space-between;">
+                                                <span style="color: #6b7280;">Termos:</span>
+                                                <span style="font-weight: 600;">${invoice.payment_terms}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 style="margin: 0 0 1rem 0; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                                    📊 System Information
+                                </h4>
+                                <div style="background: #fef7ff; padding: 1rem; border-radius: 8px; border: 1px solid #e9d5ff;">
+                                    <div style="display: grid; gap: 0.75rem;">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="color: #6b7280;">Criado:</span>
+                                            <span style="font-weight: 600; font-size: 0.9rem;">${new Date(invoice.created_at || invoice.date).toLocaleDateString('pt-BR')}</span>
+                                        </div>
+                                        ${invoice.matched_at ? `
+                                            <div style="display: flex; justify-content: space-between;">
+                                                <span style="color: #6b7280;">Matched:</span>
+                                                <span style="font-weight: 600; color: #10b981; font-size: 0.9rem;">${new Date(invoice.matched_at).toLocaleDateString('pt-BR')}</span>
+                                            </div>
+                                        ` : ''}
+                                        ${invoice.source_file ? `
+                                            <div>
+                                                <span style="color: #6b7280;">Arquivo:</span>
+                                                <div style="font-weight: 600; font-size: 0.85rem; margin-top: 0.25rem; word-break: break-all;">${invoice.source_file}</div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${lineItemsHtml}
+
+                        ${invoice.description ? `
+                            <div style="margin-top: 1.5rem;">
+                                <h5 style="margin: 0 0 0.75rem 0; color: #374151; display: flex; align-items: center; gap: 0.5rem;">
+                                    📝 Descrição
+                                </h5>
+                                <div style="background: #f1f5f9; padding: 1rem; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                                    <p style="margin: 0; color: #4b5563; line-height: 1.5;">${invoice.description}</p>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Action Buttons -->
+                        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                            <button onclick="window.open('/invoices?search=${invoice.id}', '_blank')" style="
+                                padding: 0.75rem 1.5rem; background: #3b82f6; color: white;
+                                border: none; border-radius: 6px; cursor: pointer; font-weight: 600;
+                            ">📄 Ver na Lista de Invoices</button>
+
+                            <button onclick="showVendorHistory('${invoice.vendor_name}')" style="
+                                padding: 0.75rem 1.5rem; background: #8b5cf6; color: white;
+                                border: none; border-radius: 6px; cursor: pointer; font-weight: 600;
+                            ">🏢 Histórico do Vendor</button>
+
+                            ${invoice.status !== 'matched' ? `
+                                <button onclick="quickMatchSingle('${invoice.id}'); this.closest('.modal').remove();" style="
+                                    padding: 0.75rem 1.5rem; background: #10b981; color: white;
+                                    border: none; border-radius: 6px; cursor: pointer; font-weight: 600;
+                                ">⚡ Quick Match</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.className = 'modal';
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+
+            return modal;
+        }
+    </script>
+
+    <style>
+        @keyframes slideOut {
+            from { transform: translateX(0); }
+            to { transform: translateX(100%); }
+        }
+    </style>
+</body>
+</html>

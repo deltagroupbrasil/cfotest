@@ -1,0 +1,70 @@
+# Requirements File Archived
+
+This file has been archived as of 2025-10-01.
+
+## Why was this file archived?
+
+The invoice processing module dependencies have been **consolidated** into the main project requirements file:
+
+```
+DeltaCFOAgent/requirements.txt
+```
+
+## What was changed?
+
+All dependencies from `requirements_invoice.txt` have been merged into the main `requirements.txt` file with:
+- Updated version numbers (e.g., anthropic upgraded from 0.3.0 to 0.8.0)
+- Clear organization by category
+- Inline comments explaining each package's purpose
+
+## How to install dependencies now?
+
+From the DeltaCFOAgent root directory, run:
+
+```bash
+pip install -r requirements.txt
+```
+
+This will install ALL dependencies needed for both the core system and the invoice processing module.
+
+## What dependencies were included?
+
+The following invoice-specific dependencies were added to the main requirements.txt:
+
+### PDF Processing
+- PyPDF2>=3.0.0
+- pdfplumber>=0.7.0
+- pdf2image>=1.16.0
+- reportlab>=3.6.0
+
+### Image Processing
+- opencv-python>=4.8.0
+
+### OCR
+- pytesseract>=0.3.10
+
+### Email Automation
+- exchangelib>=4.9.0
+- imapclient>=2.3.1
+
+### File Type Detection
+- python-magic>=0.4.27
+
+Dependencies already in main requirements (versions updated where needed):
+- anthropic (upgraded from 0.3.0 to 0.8.0)
+- PyMuPDF (already present)
+- Pillow (already present)
+- py7zr (already present)
+- Flask (already present)
+- pandas (already present)
+
+## Documentation Updated
+
+The following documentation files have been updated to reflect the consolidation:
+- `invoice_processing/README.md`
+- `invoice_processing/DEVELOPMENT_GUIDE.md`
+- `invoice_processing/INTEGRATION_PLAN.md`
+
+## Can I delete this archived file?
+
+Yes, this archived file can be safely deleted. It is kept for reference purposes only.

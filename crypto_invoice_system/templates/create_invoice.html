@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Invoice - Delta Energy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2em;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .line-items {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .line-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: end;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .btn-remove {
+            background: #e74c3c;
+        }
+
+        .crypto-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .crypto-amount {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Create New Invoice</h1>
+            <a href="/" class="back-link">← Back to Dashboard</a>
+        </div>
+
+        <div class="form-card">
+            <div class="success-message" id="successMessage"></div>
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="invoiceForm">
+                <div class="form-group">
+                    <label for="client">Client *</label>
+                    <select id="client" name="client_id" required>
+                        <option value="">Select Client</option>
+                        <option value="1">Alps Blockchain</option>
+                        <option value="2">Exos Capital</option>
+                        <option value="3">GM Data Centers</option>
+                        <option value="4">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="crypto_currency">Cryptocurrency *</label>
+                        <select id="crypto_currency" name="crypto_currency" required onchange="updateNetworkOptions()">
+                            <option value="">Select Currency</option>
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="USDT">Tether (USDT)</option>
+                            <option value="TAO">Bittensor (TAO)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="crypto_network">Network *</label>
+                        <select id="crypto_network" name="crypto_network" required>
+                            <option value="">Select Network</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount_usd">Amount (USD) *</label>
+                    <input type="number" id="amount_usd" name="amount_usd" step="0.01" required onchange="calculateCryptoAmount()">
+                    <div class="crypto-info" id="cryptoInfo" style="display:none;">
+                        <div>Cryptocurrency Amount:</div>
+                        <div class="crypto-amount" id="cryptoAmount">-</div>
+                        <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                            Exchange Rate: <span id="exchangeRate">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="billing_period">Billing Period *</label>
+                        <input type="text" id="billing_period" name="billing_period" placeholder="e.g., October 2025" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="due_date">Due Date *</label>
+                        <input type="date" id="due_date" name="due_date" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" name="description" placeholder="Bitcoin Mining Colocation Services">
+                </div>
+
+                <div class="form-group">
+                    <label>Line Items</label>
+                    <div class="line-items" id="lineItems">
+                        <div class="line-item">
+                            <input type="text" placeholder="Item description" class="line-desc">
+                            <input type="number" step="0.01" placeholder="Amount" class="line-amount">
+                            <button type="button" class="btn btn-remove btn-small" onclick="removeLineItem(this)">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-small" onclick="addLineItem()">+ Add Line Item</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="Additional notes or payment instructions"></textarea>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%;">Generate Invoice & Get Payment Address</button>
+            </form>
+
+            <div class="loading" id="loading">
+                <p>🔄 Generating invoice and fetching payment address from MEXC...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const networkOptions = {
+            'BTC': ['BTC'],
+            'USDT': ['TRC20', 'ERC20', 'BEP20'],
+            'TAO': ['TAO']
+        };
+
+        function updateNetworkOptions() {
+            const currency = document.getElementById('crypto_currency').value;
+            const networkSelect = document.getElementById('crypto_network');
+
+            networkSelect.innerHTML = '<option value="">Select Network</option>';
+
+            if (currency && networkOptions[currency]) {
+                networkOptions[currency].forEach(network => {
+                    const option = document.createElement('option');
+                    option.value = network;
+                    option.textContent = network;
+                    networkSelect.appendChild(option);
+                });
+            }
+
+            calculateCryptoAmount();
+        }
+
+        async function calculateCryptoAmount() {
+            const currency = document.getElementById('crypto_currency').value;
+            const network = document.getElementById('crypto_network').value;
+            const usdAmount = parseFloat(document.getElementById('amount_usd').value);
+
+            if (!currency || !usdAmount) {
+                document.getElementById('cryptoInfo').style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/crypto-price/${currency}?network=${network}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const cryptoAmount = (usdAmount / data.price).toFixed(8);
+                    document.getElementById('cryptoAmount').textContent = `${cryptoAmount} ${currency}`;
+                    document.getElementById('exchangeRate').textContent = `1 ${currency} = $${data.price.toFixed(2)}`;
+                    document.getElementById('cryptoInfo').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error fetching crypto price:', error);
+            }
+        }
+
+        function addLineItem() {
+            const container = document.getElementById('lineItems');
+            const newItem = document.createElement('div');
+            newItem.className = 'line-item';
+            newItem.innerHTML = `
+                <input type="text" placeholder="Item description" class="line-desc">
+                <input type="number" step="0.01" placeholder="Amount" class="line-amount">
+                <button type="button" class="btn btn-remove btn-small" onclick="removeLineItem(this)">Remove</button>
+            `;
+            container.appendChild(newItem);
+        }
+
+        function removeLineItem(button) {
+            button.parentElement.remove();
+        }
+
+        // Set default due date to 7 days from now
+        const today = new Date();
+        today.setDate(today.getDate() + 7);
+        document.getElementById('due_date').valueAsDate = today;
+
+        document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const form = e.target;
+            const formData = new FormData(form);
+
+            // Collect line items
+            const lineItems = [];
+            document.querySelectorAll('.line-item').forEach(item => {
+                const desc = item.querySelector('.line-desc').value;
+                const amount = item.querySelector('.line-amount').value;
+                if (desc && amount) {
+                    lineItems.push({ description: desc, amount: parseFloat(amount) });
+                }
+            });
+
+            const invoiceData = {
+                client_id: formData.get('client_id'),
+                amount_usd: formData.get('amount_usd'),
+                crypto_currency: formData.get('crypto_currency'),
+                crypto_network: formData.get('crypto_network'),
+                billing_period: formData.get('billing_period'),
+                due_date: formData.get('due_date'),
+                description: formData.get('description'),
+                notes: formData.get('notes'),
+                line_items: lineItems
+            };
+
+            // Hide form, show loading
+            form.style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/invoice/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(invoiceData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('successMessage').innerHTML = `
+                        <h3>✅ Invoice Created Successfully!</h3>
+                        <p><strong>Invoice Number:</strong> ${data.invoice_number}</p>
+                        <p><strong>Deposit Address:</strong> ${data.deposit_address}</p>
+                        <p>PDF invoice has been generated. Payment monitoring is active.</p>
+                        <a href="/" class="btn" style="margin-top: 15px;">Return to Dashboard</a>
+                    `;
+                    document.getElementById('successMessage').style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            } catch (error) {
+                document.getElementById('errorMessage').textContent = 'Error creating invoice: ' + error.message;
+                document.getElementById('errorMessage').style.display = 'block';
+                form.style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

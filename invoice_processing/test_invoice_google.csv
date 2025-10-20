@@ -1,0 +1,9 @@
+Date,Description,Vendor,Amount,Currency,Category
+2024-09-20,Cloud Services,Google Cloud,1500.00,USD,Technology
+2024-09-20,Compute Engine,Google Cloud,300.00,USD,Technology
+Total,,,1800.00,USD,
+Tax (10%),,,180.00,USD,
+Final Total,,,1980.00,USD,
+Invoice Number,INV-GCP-2024-001,,,
+Due Date,2024-10-20,,,
+Bill To,Delta LLC,,,

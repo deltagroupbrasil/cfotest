@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta CFO Agent - Transaction Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <h2>Delta CFO Agent</h2>
+                <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Delta's proprietary self improving AI CFO Agent</p>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/dashboard" class="nav-link active">Expenses</a>
+                <a href="/revenue" class="nav-link">Revenue Recognition</a>
+                <a href="/cfo-dashboard" class="nav-link">Reports</a>
+                <a href="/invoices" class="nav-link">Invoices</a>
+                <a href="/files" class="nav-link">File Manager</a>
+            </div>
+        </nav>
+
+        <div class="main-layout">
+            <div class="dashboard-content">
+                <header>
+                    <h1>Transaction Dashboard</h1>
+                    <div class="stats-summary">
+                        <div class="stat-card">
+                            <h3>Total Transactions</h3>
+                            <div class="stat-number">{{ stats.total_transactions }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Revenue</h3>
+                            <div class="stat-number positive">${{ "%.2f"|format(stats.total_revenue) }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Expenses</h3>
+                            <div class="stat-number negative">${{ "%.2f"|format(stats.total_expenses) }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Needs Review</h3>
+                            <div class="stat-number warning">{{ stats.needs_review }}</div>
+                        </div>
+                    </div>
+                    <div class="date-range">
+                        📅 Data Range: {{ stats.date_range.min }} to {{ stats.date_range.max }}
+                    </div>
+                </header>
+
+        <!-- Filter Controls -->
+        <div class="filter-section">
+            <h2>🔍 Filters</h2>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="entityFilter">Business Entity:</label>
+                    <select id="entityFilter">
+                        <option value="">All Entities</option>
+                        {% for entity, count in stats.entities %}
+                        <option value="{{ entity }}">{{ entity }} ({{ count }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="transactionType">Transaction Type:</label>
+                    <select id="transactionType">
+                        <option value="">All Types</option>
+                        <option value="Revenue">Revenue Only</option>
+                        <option value="Expense">Expenses Only</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="sourceFile">Source File:</label>
+                    <select id="sourceFile">
+                        <option value="">All Sources</option>
+                        {% for source, count in stats.source_files %}
+                        <option value="{{ source }}">{{ source|truncate(30) }} ({{ count }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="needsReview">Review Status:</label>
+                    <select id="needsReview">
+                        <option value="">All Transactions</option>
+                        <option value="true">Needs Review Only</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="minAmount">Min Amount ($):</label>
+                    <input type="number" id="minAmount" step="0.01" placeholder="0.00">
+                </div>
+
+                <div class="filter-group">
+                    <label for="maxAmount">Max Amount ($):</label>
+                    <input type="number" id="maxAmount" step="0.01" placeholder="No limit">
+                </div>
+
+                <div class="filter-group">
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" id="startDate">
+                </div>
+
+                <div class="filter-group">
+                    <label for="endDate">End Date:</label>
+                    <input type="date" id="endDate">
+                </div>
+
+                <div class="filter-group">
+                    <label for="keywordFilter">Keyword Search:</label>
+                    <input type="text" id="keywordFilter" placeholder="Search transaction descriptions...">
+                </div>
+            </div>
+
+            <div class="quick-filters">
+                <h3>🔍 Quick Filters:</h3>
+                <button id="filterTodos" class="btn-quick todo-filter">📝 To Do's Only</button>
+                <button id="filter2025" class="btn-quick">2025 Full Year</button>
+                <button id="filter2024" class="btn-quick">2024 Full Year</button>
+                <button id="filterYTD" class="btn-quick">2025 YTD</button>
+            </div>
+
+            <button id="applyFilters" class="btn-primary">Apply Filters</button>
+            <button id="clearFilters" class="btn-secondary">Clear All</button>
+        </div>
+
+        <!-- Transaction Table -->
+        <div class="table-section">
+            <div class="table-header">
+                <h2>📋 Transactions</h2>
+                <div class="table-info">
+                    <span id="tableInfo">Loading...</span>
+                    <button id="refreshData" class="btn-secondary">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="transactionTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Entity</th>
+                            <th>Confidence</th>
+                            <th>Source</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                        <tr>
+                            <td colspan="7" class="loading">Loading transactions...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}?v={{ cache_buster }}"></script>
+</body>
+</html>
