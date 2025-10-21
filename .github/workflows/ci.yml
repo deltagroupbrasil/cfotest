@@ -67,3 +67,25 @@ jobs:
       - name: Run frontend tests with coverage
         run: |
           npm run test:ci
+
+      - name: Install Playwright Browsers
+        run: |
+          npx playwright install --with-deps
+
+      - name: Seed CSV and start Flask app
+        env:
+          FLASK_APP: web_ui.app
+          DB_TYPE: sqlite
+          SQLITE_DB_PATH: e2e_app.sqlite
+        run: |
+          echo "Date,Description,Amount,classified_entity,confidence,source_file" > MASTER_TRANSACTIONS.csv
+          echo "2024-01-01,Sale A,100,EntityA,0.9,seed.csv" >> MASTER_TRANSACTIONS.csv
+          echo "2024-01-02,Office Supplies,-30,EntityB,0.7,seed.csv" >> MASTER_TRANSACTIONS.csv
+          nohup python -m flask run --port 5001 --no-reload > flask.log 2>&1 &
+          npx wait-on http://127.0.0.1:5001
+
+      - name: Run Playwright E2E tests
+        env:
+          BASE_URL: http://127.0.0.1:5001
+        run: |
+          npm run test:e2e
