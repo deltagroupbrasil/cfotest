@@ -89,3 +89,32 @@ jobs:
           BASE_URL: http://127.0.0.1:5001
         run: |
           npm run test:e2e
+
+      - name: Seed SQLite for app_db and start on 5002
+        env:
+          DB_TYPE: sqlite
+          SQLITE_DB_PATH: appdb.sqlite
+          FLASK_APP: web_ui.app_db
+        run: |
+          python - << 'PY'
+          import os, sqlite3
+          os.environ['DB_TYPE']='sqlite'
+          os.environ['SQLITE_DB_PATH']='appdb.sqlite'
+          from web_ui.database import db_manager
+          db_manager.db_type='sqlite'
+          db_manager.init_database()
+          conn=sqlite3.connect('appdb.sqlite')
+          cur=conn.cursor()
+          cur.execute("INSERT OR REPLACE INTO transactions (transaction_id,date,description,amount,currency,usd_equivalent,classified_entity,source_file) VALUES (?,?,?,?,?,?,?,?)",
+                     ('tx-e2e','2024-02-01','E2E Seed Row',42.0,'USD',42.0,'EntityE2E','e2e.csv'))
+          conn.commit()
+          conn.close()
+          PY
+          nohup python -m flask run --port 5002 --no-reload > flask_appdb.log 2>&1 &
+          npx wait-on http://127.0.0.1:5002
+
+      - name: Run Playwright E2E tests for app_db
+        env:
+          BASE_URL: http://127.0.0.1:5002
+        run: |
+          npx playwright test tests-e2e/appdb_integration.e2e.spec.ts
