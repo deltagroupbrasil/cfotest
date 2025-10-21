@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ '3.11', '3.12' ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies (test-only)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov coverage Flask pandas
+
+      - name: Run tests
+        run: |
+          pytest -q
+
+      - name: Coverage (targeted, exclude flaky)
+        run: |
+          pytest -q \
+            --cov=web_ui/app.py \
+            --cov=web_ui/database.py \
+            --cov=web_ui/smart_matching_criteria.py \
+            --cov=web_ui/robust_revenue_matcher.py \
+            --cov=database_utils.py \
+            --cov=crypto_pricing.py \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-report=html:htmlcov \
+            -k "not app_transactions"
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: |
+            coverage.xml
+            htmlcov
+
