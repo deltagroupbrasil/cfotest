@@ -44,6 +44,7 @@ jobs:
             --cov-report=term-missing \
             --cov-report=xml \
             --cov-report=html:htmlcov \
+            --cov-fail-under=75 \
             -k "not app_transactions"
 
       - name: Upload coverage artifacts
@@ -53,4 +54,3 @@ jobs:
           path: |
             coverage.xml
             htmlcov
-
